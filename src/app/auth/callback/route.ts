@@ -23,8 +23,12 @@ export async function GET(request: Request) {
           .eq("user_id", user.id)
           .limit(1);
 
-        // If user already has habits, go to dashboard
+        // If user already has habits
         if (habits && habits.length > 0) {
+          // If they came from a join link, let them go there. Otherwise dashboard.
+          if (next && next.startsWith("/join/")) {
+            return NextResponse.redirect(`${origin}${next}`);
+          }
           return NextResponse.redirect(`${origin}/dashboard`);
         }
       }

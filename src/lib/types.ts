@@ -41,8 +41,36 @@ export interface Streak {
   current_streak: number;
   longest_streak: number;
   last_completed_date: string | null;
+  last_grace_date: string | null;
   total_completions: number;
   updated_at: string;
+}
+
+export interface Halaqa {
+  id: string;
+  name: string;
+  created_by: string | null;
+  invite_code: string;
+  gender: "Brother" | "Sister";
+  is_public: boolean;
+  max_members: number;
+  created_at: string;
+}
+
+export interface HalaqaMember {
+  halaqa_id: string;
+  user_id: string;
+  joined_at: string;
+}
+
+export interface HalaqaReaction {
+  id: string;
+  halaqa_id: string;
+  sender_id: string;
+  receiver_id: string;
+  emoji: string;
+  date: string;
+  created_at: string;
 }
 
 // Preset habits for onboarding selection

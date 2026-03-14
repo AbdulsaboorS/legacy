@@ -181,10 +181,42 @@ export default function DashboardClient() {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-      const newStreak =
-        streak.last_completed_date === yesterdayStr || streak.last_completed_date === today
-          ? streak.current_streak + (streak.last_completed_date === today ? 0 : 1)
-          : 1;
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      const twoDaysAgoStr = twoDaysAgo.toISOString().split("T")[0];
+
+      let newStreak = 1;
+      let newGraceDate = streak.last_grace_date;
+
+      if (streak.last_completed_date === today) {
+        // Already completed today
+        newStreak = streak.current_streak;
+      } else if (streak.last_completed_date === yesterdayStr) {
+        // Perfect streak
+        newStreak = streak.current_streak + 1;
+      } else if (streak.last_completed_date === twoDaysAgoStr) {
+        // Missed exactly yesterday. Can we use a grace day?
+        let canUseGrace = true;
+        if (streak.last_grace_date) {
+          const graceDate = new Date(streak.last_grace_date);
+          const diffDays = Math.floor((new Date().getTime() - graceDate.getTime()) / (1000 * 3600 * 24));
+          if (diffDays <= 7) {
+            canUseGrace = false;
+          }
+        }
+
+        if (canUseGrace) {
+          // Grace day used! Streak survives.
+          newStreak = streak.current_streak + 1; // Or +2 if we want to count the forgiven day, let's just +1
+          newGraceDate = yesterdayStr; // Mark yesterday as the grace day
+        } else {
+          // Missed yesterday and grace not available. Streak breaks.
+          newStreak = 1;
+        }
+      } else {
+        // Missed more than 1 day. Streak breaks.
+        newStreak = 1;
+      }
 
       const newLongest = Math.max(streak.longest_streak, newStreak);
 
@@ -194,6 +226,7 @@ export default function DashboardClient() {
           current_streak: newStreak,
           longest_streak: newLongest,
           last_completed_date: today,
+          last_grace_date: newGraceDate,
           total_completions: streak.total_completions + 1,
           updated_at: new Date().toISOString(),
         })
@@ -206,6 +239,7 @@ export default function DashboardClient() {
               current_streak: newStreak,
               longest_streak: newLongest,
               last_completed_date: today,
+              last_grace_date: newGraceDate,
               total_completions: prev.total_completions + 1,
             }
           : prev
@@ -227,12 +261,13 @@ export default function DashboardClient() {
       .update({
         current_streak: 0,
         last_completed_date: null,
+        last_grace_date: null,
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", user.id);
 
     setStreak((prev) =>
-      prev ? { ...prev, current_streak: 0, last_completed_date: null } : prev
+      prev ? { ...prev, current_streak: 0, last_completed_date: null, last_grace_date: null } : prev
     );
     setShowResetModal(false);
   };
@@ -261,6 +296,25 @@ export default function DashboardClient() {
     if (streakCount >= 30) milestones.push({ label: "30 Days", emoji: "🏆" });
     if (streakCount >= 60) milestones.push({ label: "60 Days", emoji: "👑" });
     return milestones;
+  };
+
+  const shareMilestone = async () => {
+    if (!streak) return;
+    const url = `${window.location.origin}/api/og?name=${encodeURIComponent(userName || "Friend")}&streak=${streak.current_streak}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Post-Ramadan Legacy',
+          text: `I've built a ${streak.current_streak}-day streak of my core habits post-Ramadan! Join me on Legacy.`,
+          url: url,
+        });
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      window.open(url, "_blank");
+    }
   };
 
   if (loading) {
@@ -338,9 +392,28 @@ export default function DashboardClient() {
         <div className="flex gap-3 mb-5">
           {/* Streak card */}
           <div
-            className="glass flex-1 p-4 text-center"
+            className="glass flex-1 p-4 text-center relative"
             style={{ borderRadius: "var(--radius-lg)" }}
           >
+            {/* Grace Shield Indicator */}
+            {streak?.last_grace_date && (
+              (() => {
+                const diffDays = Math.floor((new Date().getTime() - new Date(streak.last_grace_date).getTime()) / (1000 * 3600 * 24));
+                if (diffDays <= 7) {
+                  return (
+                    <div 
+                      className="absolute top-2 right-2 text-xs flex items-center gap-1 bg-background px-2 py-0.5 rounded-full border shadow-sm animate-fade-in"
+                      style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+                      title="Grace day used this week. Your streak is protected!"
+                    >
+                      <span>🛡️</span> Grace
+                    </div>
+                  );
+                }
+                return null;
+              })()
+            )}
+
             <div className="text-3xl mb-1 animate-streak-fire">🔥</div>
             <div className="text-2xl font-bold">{streak?.current_streak || 0}</div>
             <div className="text-xs" style={{ color: "var(--foreground-muted)" }}>
@@ -359,6 +432,16 @@ export default function DashboardClient() {
                 ))}
               </div>
             )}
+            
+            {streak && streak.current_streak > 0 && (
+              <button
+                onClick={shareMilestone}
+                className="mt-3 text-xs bg-primary/20 hover:bg-primary/30 text-primary px-3 py-1.5 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto"
+              >
+                <span>📤</span> Share Milestone
+              </button>
+            )}
+
             {streak && streak.current_streak === 0 && (
               <button
                 onClick={() => setShowResetModal(true)}

@@ -18,6 +18,11 @@ interface SelectedHabit extends PresetHabit {
 export default function OnboardingClient() {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+  
+  // Step 1: Profile
+  const [preferredName, setPreferredName] = useState("");
+  const [gender, setGender] = useState<"Brother" | "Sister" | "">("");
+  
   const [step, setStep] = useState(1);
   const [selectedHabits, setSelectedHabits] = useState<SelectedHabit[]>([]);
   const [customHabitName, setCustomHabitName] = useState("");
@@ -26,7 +31,8 @@ export default function OnboardingClient() {
   const [isSaving, setIsSaving] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
-  const totalSteps = 3;
+  const totalSteps = 4;
+  const MAX_HABITS = 3;
 
   // Toggle habit selection
   const toggleHabit = (habit: PresetHabit) => {
@@ -35,6 +41,13 @@ export default function OnboardingClient() {
       if (exists) {
         return prev.filter((h) => h.name !== habit.name);
       }
+      
+      // Enforce max 3 habits
+      if (prev.length >= MAX_HABITS) {
+        alert("To guarantee success, please focus on a maximum of 3 core habits for now. You can add more later!");
+        return prev;
+      }
+      
       return [
         ...prev,
         {
@@ -48,6 +61,12 @@ export default function OnboardingClient() {
   // Add custom habit
   const addCustomHabit = () => {
     if (!customHabitName.trim()) return;
+    
+    if (selectedHabits.length >= MAX_HABITS) {
+      alert("To guarantee success, please focus on a maximum of 3 core habits for now. You can add more later!");
+      return;
+    }
+    
     const customHabit: SelectedHabit = {
       name: customHabitName.trim(),
       icon: customHabitIcon,
@@ -120,9 +139,9 @@ export default function OnboardingClient() {
     }
   };
 
-  // Fetch suggestions sequentially when entering step 2
+  // Fetch suggestions sequentially when entering step 3
   useEffect(() => {
-    if (step === 2 && selectedHabits.length > 0) {
+    if (step === 3 && selectedHabits.length > 0) {
       const fetchNext = async () => {
         if (currentSuggestionIndex < selectedHabits.length) {
           const habit = selectedHabits[currentSuggestionIndex];
@@ -152,6 +171,15 @@ export default function OnboardingClient() {
         router.push("/");
         return;
       }
+
+      // Create profile
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: user.id,
+        preferred_name: preferredName,
+        gender: gender as "Brother" | "Sister",
+      });
+
+      if (profileError) throw profileError;
 
       // Insert habits
       const habitsToInsert = selectedHabits.map((habit) => ({
@@ -225,7 +253,7 @@ export default function OnboardingClient() {
       <div className="relative z-10 flex-1 flex flex-col max-w-lg mx-auto w-full px-6 pt-16 pb-8">
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-8">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
               className="flex items-center gap-2"
@@ -240,9 +268,9 @@ export default function OnboardingClient() {
               >
                 {s < step ? "✓" : s}
               </div>
-              {s < 3 && (
+              {s < 4 && (
                 <div
-                  className="w-12 h-0.5 transition-all duration-300"
+                  className="w-8 h-0.5 transition-all duration-300"
                   style={{
                     background: s < step ? "var(--primary)" : "var(--surface-border)",
                   }}
@@ -252,12 +280,82 @@ export default function OnboardingClient() {
           ))}
         </div>
 
-        {/* ========== STEP 1: Select Habits ========== */}
+        {/* ========== STEP 1: Profile Setup ========== */}
         {step === 1 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h2 className="text-2xl font-bold mb-2">What did you build this Ramadan?</h2>
+            <h2 className="text-2xl font-bold mb-2">Welcome to Legacy 🌙</h2>
             <p className="mb-6" style={{ color: "var(--foreground-muted)" }}>
-              Select the habits you want to carry forward.
+              Let&apos;s personalize your experience.
+            </p>
+
+            <div className="space-y-6 mb-8">
+              <div>
+                <label className="text-sm font-medium mb-2 block">What should we call you?</label>
+                <input
+                  type="text"
+                  value={preferredName}
+                  onChange={(e) => setPreferredName(e.target.value)}
+                  placeholder="e.g., Bilal or Sarah"
+                  className="w-full h-12 px-4 rounded-xl border-none text-base transition-shadow"
+                  style={{
+                    background: "var(--background-secondary)",
+                    color: "var(--foreground)",
+                    boxShadow: preferredName ? "0 0 0 2px var(--primary)" : "none",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Gender (for group matchmaking)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setGender("Brother")}
+                    className="h-12 rounded-xl font-medium transition-all"
+                    style={{
+                      background: gender === "Brother" ? "var(--primary)" : "var(--background-secondary)",
+                      color: gender === "Brother" ? "var(--primary-foreground)" : "var(--foreground)",
+                    }}
+                  >
+                    Brother
+                  </button>
+                  <button
+                    onClick={() => setGender("Sister")}
+                    className="h-12 rounded-xl font-medium transition-all"
+                    style={{
+                      background: gender === "Sister" ? "var(--primary)" : "var(--background-secondary)",
+                      color: gender === "Sister" ? "var(--primary-foreground)" : "var(--foreground)",
+                    }}
+                  >
+                    Sister
+                  </button>
+                </div>
+                <p className="text-xs mt-2" style={{ color: "var(--foreground-muted)" }}>
+                  Required so we can place you in strictly gender-segregated accountability circles.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-auto flex items-center justify-end">
+              <button
+                onClick={() => setStep(2)}
+                className="btn btn-primary"
+                disabled={!preferredName.trim() || !gender}
+                style={{
+                  opacity: (!preferredName.trim() || !gender) ? 0.5 : 1,
+                }}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========== STEP 2: Select Habits ========== */}
+        {step === 2 && (
+          <div className="animate-fade-in flex-1 flex flex-col">
+            <h2 className="text-2xl font-bold mb-2">Build your Core 3</h2>
+            <p className="mb-6" style={{ color: "var(--foreground-muted)" }}>
+              Select a maximum of 3 habits to focus on. Less is more.
             </p>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
@@ -334,12 +432,28 @@ export default function OnboardingClient() {
 
             {/* Selected count + Next */}
             <div className="mt-auto flex items-center justify-between">
-              <span className="text-sm" style={{ color: "var(--foreground-muted)" }}>
-                {selectedHabits.length} habit{selectedHabits.length !== 1 ? "s" : ""} selected
-              </span>
               <button
-                onClick={() => setStep(2)}
-                className="btn btn-primary"
+                onClick={() => setStep(1)}
+                className="btn btn-secondary w-20"
+              >
+                ← Back
+              </button>
+              <div className="text-center flex-1 mx-4">
+                <span className="text-sm font-medium" style={{ 
+                  color: selectedHabits.length === MAX_HABITS ? "var(--primary)" : "var(--foreground-muted)" 
+                }}>
+                  {selectedHabits.length} / {MAX_HABITS} selected
+                </span>
+                <div className="h-1 w-full bg-slate-800 rounded-full mt-1 overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300" 
+                    style={{ width: `${(selectedHabits.length / MAX_HABITS) * 100}%` }}
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => setStep(3)}
+                className="btn btn-primary w-20"
                 disabled={selectedHabits.length === 0}
                 style={{
                   opacity: selectedHabits.length === 0 ? 0.5 : 1,
@@ -351,8 +465,8 @@ export default function OnboardingClient() {
           </div>
         )}
 
-        {/* ========== STEP 2: AI Step-Down Suggestions ========== */}
-        {step === 2 && (
+        {/* ========== STEP 3: AI Step-Down Suggestions ========== */}
+        {step === 3 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h2 className="text-2xl font-bold mb-2">Your graceful step-down plan</h2>
             <p className="mb-6" style={{ color: "var(--foreground-muted)" }}>
@@ -474,13 +588,13 @@ export default function OnboardingClient() {
 
             <div className="mt-auto flex items-center justify-between">
               <button
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
                 className="btn btn-secondary"
               >
                 ← Back
               </button>
               <button
-                onClick={() => setStep(3)}
+                onClick={() => setStep(4)}
                 className="btn btn-primary"
               >
                 Next →
@@ -489,8 +603,8 @@ export default function OnboardingClient() {
           </div>
         )}
 
-        {/* ========== STEP 3: Review & Confirm ========== */}
-        {step === 3 && (
+        {/* ========== STEP 4: Review & Confirm ========== */}
+        {step === 4 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h2 className="text-2xl font-bold mb-2">Your Post-Ramadan Plan</h2>
             <p className="mb-6" style={{ color: "var(--foreground-muted)" }}>
@@ -569,9 +683,9 @@ export default function OnboardingClient() {
               <span className="block mt-1 text-xs opacity-70">— Sunan Ibn Majah</span>
             </div>
 
-            <div className="mt-auto flex items-center justify-between">
+            <div className="mt-auto flex items-center justify-between pt-6">
               <button
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 className="btn btn-secondary"
               >
                 ← Back

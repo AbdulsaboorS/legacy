@@ -8,10 +8,23 @@ export default function LandingPage() {
 
   const handleSignIn = async () => {
     const supabase = createClient();
+    
+    // Check if we have a pending invite link to redirect to
+    let redirectUrl = `${window.location.origin}/auth/callback`;
+    try {
+      const next = sessionStorage.getItem("redirect_after_login");
+      if (next) {
+        redirectUrl += `?next=${encodeURIComponent(next)}`;
+        sessionStorage.removeItem("redirect_after_login"); // Clear it
+      }
+    } catch (e) {
+      console.error("Session storage error:", e);
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: redirectUrl,
       },
     });
   };
