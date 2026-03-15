@@ -27,35 +27,10 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden px-6">
-      {/* Sacred Dawn background */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            theme === "dark"
-              ? "linear-gradient(180deg, #141210 0%, #1A2820 45%, #1E1A10 100%)"
-              : "linear-gradient(180deg, #F9F7F2 0%, #E8F5EE 45%, #FFF8EC 100%)",
-        }}
-      />
-
-      {/* Islamic geometric pattern overlay */}
-      <div
-        className="pointer-events-none fixed inset-0 pattern-bg"
-        style={{ opacity: theme === "dark" ? 0.04 : 0.03 }}
-      />
-
-      {/* Radial glow accents */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            theme === "dark"
-              ? "radial-gradient(ellipse at 50% 0%, rgba(76, 175, 130, 0.12) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, rgba(201, 150, 58, 0.08) 0%, transparent 50%)"
-              : "radial-gradient(ellipse at 50% 0%, rgba(27, 94, 69, 0.08) 0%, transparent 55%), radial-gradient(ellipse at 80% 100%, rgba(201, 150, 58, 0.06) 0%, transparent 50%)",
-        }}
-      />
-
+    <main
+      className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden px-6"
+      style={{ background: "var(--background)" }}
+    >
       {/* Theme toggle */}
       <button
         onClick={toggleTheme}
@@ -73,10 +48,7 @@ export default function LandingPage() {
           className="mb-3 text-3xl animate-float"
           style={{
             fontFamily: "var(--font-arabic)",
-            background: "var(--gradient-gold)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
+            color: "var(--accent)",
           }}
         >
           بِسْمِ ٱللَّٰهِ
@@ -86,29 +58,27 @@ export default function LandingPage() {
         <div
           className="mb-6 px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase"
           style={{
-            background: "rgba(27, 94, 69, 0.12)",
-            color: "var(--primary)",
-            border: "1px solid rgba(27, 94, 69, 0.2)",
+            color: "var(--accent)",
+            border: "1px solid rgba(217, 119, 6, 0.35)",
+            background: "rgba(217, 119, 6, 0.06)",
           }}
         >
           Legacy
         </div>
 
         {/* Heading */}
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4 leading-tight">
-          <span
-            style={{
-              background: "var(--gradient-primary)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            Your Ramadan
-          </span>
-          <br />
-          <span style={{ color: "var(--foreground)" }}>
-            doesn&apos;t have to end.
+        <h1
+          className="text-5xl sm:text-6xl mb-4 leading-tight tracking-tight"
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 300,
+            color: "var(--foreground)",
+          }}
+        >
+          Expand on your<br />
+          Ramadan&nbsp;
+          <span style={{ color: "var(--accent)", fontStyle: "italic" }}>
+            Legacy
           </span>
         </h1>
 
@@ -129,10 +99,9 @@ export default function LandingPage() {
                 key={f}
                 className="px-3 py-1.5 rounded-full text-xs font-medium"
                 style={{
-                  background: "var(--surface)",
-                  border: "1px solid var(--surface-border)",
+                  background: "transparent",
+                  border: "1px solid rgba(217, 119, 6, 0.3)",
                   color: "var(--foreground-muted)",
-                  backdropFilter: "blur(8px)",
                 }}
               >
                 {f}
@@ -141,10 +110,14 @@ export default function LandingPage() {
           )}
         </div>
 
-        {/* Hadith quote card */}
+        {/* Hadith quote card — left amber border */}
         <div
-          className="glass mb-8 py-4 px-5 text-sm max-w-sm w-full"
-          style={{ color: "var(--foreground-muted)", fontStyle: "italic" }}
+          className="mb-8 py-4 px-5 text-sm max-w-sm w-full text-left"
+          style={{
+            borderLeft: "3px solid var(--accent)",
+            color: "var(--foreground-muted)",
+            fontStyle: "italic",
+          }}
         >
           <p>
             &ldquo;The most beloved of deeds to Allah are those that are most
@@ -164,9 +137,10 @@ export default function LandingPage() {
           id="google-sign-in"
           className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-semibold text-base mb-4 transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
           style={{
-            background: theme === "dark" ? "#FFFFFF" : "#FFFFFF",
+            background: "#FFFFFF",
             color: "#1C1A14",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
+            border: "1px solid rgba(0,0,0,0.08)",
           }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -202,12 +176,8 @@ export default function LandingPage() {
 
       {/* Bottom accent line */}
       <div
-        className="fixed bottom-0 left-0 right-0 h-0.5"
-        style={{
-          background:
-            "linear-gradient(90deg, var(--primary), var(--accent), var(--primary))",
-          opacity: 0.4,
-        }}
+        className="fixed bottom-0 left-0 right-0 h-px"
+        style={{ background: "var(--accent)", opacity: 0.35 }}
       />
     </main>
   );

@@ -103,17 +103,6 @@ export default function SettingsClient() {
 
   return (
     <main className="relative min-h-dvh pb-8">
-      {/* Background */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            theme === "dark"
-              ? "radial-gradient(ellipse at 50% 0%, rgba(76, 175, 130, 0.07) 0%, transparent 50%)"
-              : "radial-gradient(ellipse at 50% 0%, rgba(27, 94, 69, 0.05) 0%, transparent 50%)",
-        }}
-      />
-
       <div className="relative z-10 max-w-lg mx-auto px-5 pt-6 sm:pt-24">
         {/* Header */}
         <div className="mb-8">
@@ -148,7 +137,7 @@ export default function SettingsClient() {
               className="relative h-7 w-12 rounded-full transition-all duration-300 cursor-pointer"
               style={{
                 background:
-                  theme === "dark" ? "var(--primary)" : "var(--surface-border)",
+                  theme === "dark" ? "var(--accent)" : "var(--surface-border)",
               }}
               aria-label="Toggle theme"
             >

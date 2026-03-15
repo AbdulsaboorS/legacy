@@ -1,48 +1,48 @@
 @import "tailwindcss";
 
 /* ========================================
-   LEGACY — Sacred Dawn Design System
-   Deep forest green, warm ivory/charcoal,
-   Islamic geometric texture, premium glass.
+   LEGACY — Editorial Design System
+   Light white, near-black, amber accent.
+   Clean, readable, no glassmorphism.
    ======================================== */
 
 /* ---------- Light Theme ---------- */
 :root {
-  --background: #F9F7F2;
-  --background-secondary: #EFECE6;
-  --foreground: #1C1A14;
-  --foreground-muted: #6B7280;
+  --background: #FAFAFA;
+  --background-secondary: #F4F2EE;
+  --foreground: #0D0D0D;
+  --foreground-muted: #6B6B6B;
 
-  /* Primary — Deep Forest Green */
-  --primary: #1B5E45;
-  --primary-light: #4CAF82;
-  --primary-dark: #144D38;
+  /* Primary — Near-Black (editorial) */
+  --primary: #0D0D0D;
+  --primary-light: #333333;
+  --primary-dark: #000000;
   --primary-foreground: #FFFFFF;
 
-  /* Accent — Warm Gold (achievement, celebration) */
-  --accent: #C9963A;
-  --accent-light: #E8B85A;
-  --accent-dark: #A67C2A;
+  /* Accent — Amber (the one color) */
+  --accent: #D97706;
+  --accent-light: #F59E0B;
+  --accent-dark: #B45309;
 
-  /* Success — Soft Green (completion) */
-  --success: #22C55E;
+  /* Success — Green (completion) */
+  --success: #16A34A;
   --success-light: #86EFAC;
 
-  /* Surface — Cards/Glass */
-  --surface: rgba(255, 255, 255, 0.7);
-  --surface-hover: rgba(255, 255, 255, 0.85);
-  --surface-border: rgba(27, 94, 69, 0.12);
+  /* Surface — Solid (no glass) */
+  --surface: #FFFFFF;
+  --surface-hover: #FAFAFA;
+  --surface-border: rgba(0, 0, 0, 0.09);
 
   /* Streak Fire */
   --streak-1: #F59E0B;
   --streak-2: #EF4444;
   --streak-3: #F97316;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
-  --shadow-glow: 0 0 20px rgba(27, 94, 69, 0.3);
+  /* Shadows — lighter for editorial */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.10);
+  --shadow-glow: 0 0 20px rgba(217, 119, 6, 0.25);
 
   /* Radius */
   --radius-sm: 8px;
@@ -51,43 +51,37 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Gradients */
-  --gradient-dawn: linear-gradient(180deg, #F9F7F2 0%, #E8F5EE 40%, #FFF8EC 100%);
-  --gradient-gold: linear-gradient(135deg, #C9963A, #E8B85A);
-  --gradient-primary: linear-gradient(135deg, #1B5E45, #144D38);
+  /* Typography */
+  --font-serif: var(--font-cormorant, 'Cormorant Garamond', Georgia, serif);
 }
 
 /* ---------- Dark Theme ---------- */
 [data-theme="dark"] {
-  --background: #141210;
-  --background-secondary: #1E1C17;
+  --background: #0F0F0F;
+  --background-secondary: #1A1A1A;
   --foreground: #F1F0EE;
   --foreground-muted: #9CA3AF;
 
-  --primary: #4CAF82;
-  --primary-light: #6DD49B;
-  --primary-dark: #3A9B70;
-  --primary-foreground: #141210;
+  --primary: #F1F0EE;
+  --primary-light: #FFFFFF;
+  --primary-dark: #D4D4D0;
+  --primary-foreground: #0F0F0F;
 
-  --accent: #E8B85A;
-  --accent-light: #F5D088;
-  --accent-dark: #C9963A;
+  --accent: #D97706;
+  --accent-light: #F59E0B;
+  --accent-dark: #B45309;
 
-  --success: #4ADE80;
+  --success: #22C55E;
   --success-light: #86EFAC;
 
-  --surface: rgba(20, 18, 16, 0.75);
-  --surface-hover: rgba(30, 28, 23, 0.9);
-  --surface-border: rgba(255, 255, 255, 0.08);
+  --surface: #1A1A1A;
+  --surface-hover: #222222;
+  --surface-border: rgba(255, 255, 255, 0.10);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 25px rgba(76, 175, 130, 0.25);
-
-  --gradient-dawn: linear-gradient(180deg, #141210 0%, #1A2820 40%, #1E1A10 100%);
-  --gradient-gold: linear-gradient(135deg, #C9963A, #E8B85A);
-  --gradient-primary: linear-gradient(135deg, #4CAF82, #3A9B70);
+  --shadow-glow: 0 0 25px rgba(217, 119, 6, 0.25);
 }
 
 /* ---------- Tailwind Theme Tokens ---------- */
@@ -114,6 +108,7 @@
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-arabic: 'Amiri', serif;
+  --font-serif: var(--font-serif);
 
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
@@ -221,14 +216,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---------- Glassmorphism Utilities ---------- */
+/* ---------- Card Utilities (solid, no blur) ---------- */
 .glass {
   background: var(--surface);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .glass-hover {
@@ -237,17 +230,15 @@ body {
 
 .glass-hover:hover {
   background: var(--surface-hover);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
 .glass-gold {
   background: var(--surface);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(201, 150, 58, 0.3);
+  border: 1px solid rgba(217, 119, 6, 0.25);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ---------- Button Base ---------- */
@@ -271,35 +262,40 @@ body {
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
+  background: var(--primary);
   color: var(--primary-foreground);
   box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  box-shadow: var(--shadow-glow);
-  opacity: 0.92;
+  opacity: 0.88;
+  box-shadow: var(--shadow-md);
 }
 
 .btn-secondary {
-  background: var(--surface);
+  background: transparent;
   color: var(--foreground);
-  backdrop-filter: blur(12px);
   border: 1px solid var(--surface-border);
 }
 
 .btn-secondary:hover {
-  background: var(--surface-hover);
+  background: var(--surface);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btn-accent {
-  background: var(--gradient-gold);
+  background: var(--accent);
   color: white;
   box-shadow: var(--shadow-sm);
 }
 
 .btn-accent:hover {
-  box-shadow: 0 0 20px rgba(201, 150, 58, 0.35);
+  background: var(--accent-dark);
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.3);
 }
 
 .btn-ghost {
@@ -335,14 +331,14 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.pattern-bg {
-  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23888' fill-opacity='1'%3E%3Cpath d='M40 8l4.47 13.77L58.04 14l-9.04 10.37L64 34.12l-15.2 1.57L46 50l-6-13.12L34 50l-2.8-14.31L16 34.12l15-9.75L22 14l13.53 7.77z'/%3E%3C/g%3E%3C/svg%3E");
+.font-serif {
+  font-family: var(--font-serif);
 }
 
 /* ---------- Scrollbar ---------- */
@@ -361,6 +357,6 @@ body {
 
 /* ---------- Selection ---------- */
 ::selection {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--accent);
+  color: white;
 }

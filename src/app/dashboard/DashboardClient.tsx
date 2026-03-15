@@ -305,17 +305,6 @@ export default function DashboardClient() {
 
   return (
     <main className="relative min-h-dvh pb-8">
-      {/* Background */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            theme === "dark"
-              ? "radial-gradient(ellipse at 20% 0%, rgba(76, 175, 130, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(201, 150, 58, 0.05) 0%, transparent 50%)"
-              : "radial-gradient(ellipse at 20% 0%, rgba(27, 94, 69, 0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(201, 150, 58, 0.04) 0%, transparent 50%)",
-        }}
-      />
-
       <div className="relative z-10 max-w-lg mx-auto px-5 pt-6 sm:pt-24">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -421,7 +410,7 @@ export default function DashboardClient() {
               <button
                 onClick={() => setShowResetModal(true)}
                 className="mt-2 text-xs underline cursor-pointer"
-                style={{ color: "var(--primary)" }}
+                style={{ color: "var(--accent)" }}
               >
                 Start Fresh
               </button>
@@ -448,7 +437,7 @@ export default function DashboardClient() {
                   cy="40"
                   r="34"
                   fill="none"
-                  stroke={completionPercentage === 100 ? "var(--accent)" : "var(--primary)"}
+                  stroke={completionPercentage === 100 ? "var(--accent)" : "var(--foreground-muted)"}
                   strokeWidth="5"
                   strokeDasharray={`${(completionPercentage / 100) * 213.63} 213.63`}
                   strokeLinecap="round"
@@ -491,7 +480,7 @@ export default function DashboardClient() {
                 background:
                   shawwalDaysCompleted >= 6
                     ? "var(--success)"
-                    : "var(--gradient-gold)",
+                    : "var(--accent)",
                 color: "white",
                 borderRadius: "var(--radius-full)",
               }}
@@ -538,12 +527,12 @@ export default function DashboardClient() {
                       ? "var(--radius-lg) var(--radius-lg) 0 0"
                       : "var(--radius-lg)",
                     border: isCompleted
-                      ? "1px solid rgba(34, 197, 94, 0.35)"
+                      ? "1px solid rgba(217, 119, 6, 0.35)"
                       : "1px solid var(--surface-border)",
                     background: isCompleted
                       ? theme === "dark"
-                        ? "rgba(34, 197, 94, 0.07)"
-                        : "rgba(34, 197, 94, 0.05)"
+                        ? "rgba(217, 119, 6, 0.08)"
+                        : "rgba(217, 119, 6, 0.05)"
                       : undefined,
                   }}
                 >
@@ -656,7 +645,7 @@ export default function DashboardClient() {
                                   <span
                                     className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
                                     style={{
-                                      background: "var(--gradient-primary)",
+                                      background: "var(--primary)",
                                       color: "white",
                                     }}
                                   >
@@ -724,11 +713,11 @@ export default function DashboardClient() {
             className="glass p-6 text-center mb-6 animate-bounce-in"
             style={{
               borderRadius: "var(--radius-xl)",
-              border: "1px solid rgba(34, 197, 94, 0.3)",
+              border: "1px solid rgba(217, 119, 6, 0.3)",
               background:
                 theme === "dark"
-                  ? "rgba(34, 197, 94, 0.07)"
-                  : "rgba(34, 197, 94, 0.04)",
+                  ? "rgba(217, 119, 6, 0.08)"
+                  : "rgba(217, 119, 6, 0.04)",
             }}
           >
             <div className="flex justify-center gap-2 text-3xl mb-3 animate-float">
@@ -771,7 +760,7 @@ export default function DashboardClient() {
               <p className="text-sm mb-1" style={{ color: "var(--foreground-muted)" }}>
                 Everyone stumbles. What matters is getting back up.
               </p>
-              <p className="text-sm italic mb-6" style={{ color: "var(--primary)" }}>
+              <p className="text-sm italic mb-6" style={{ color: "var(--accent)" }}>
                 &ldquo;The best of sinners are those who repent.&rdquo;
                 <span className="block text-xs opacity-70">— Sunan at-Tirmidhi</span>
               </p>

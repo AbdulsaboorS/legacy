@@ -74,15 +74,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         };
       case "copied":
         return {
-          bg: "rgba(76, 175, 130, 0.15)",
-          border: "rgba(76, 175, 130, 0.4)",
-          iconColor: "var(--primary)",
+          bg: "rgba(217, 119, 6, 0.12)",
+          border: "rgba(217, 119, 6, 0.35)",
+          iconColor: "var(--accent)",
         };
       default:
         return {
-          bg: "rgba(76, 175, 130, 0.15)",
-          border: "rgba(76, 175, 130, 0.4)",
-          iconColor: "var(--primary)",
+          bg: "rgba(217, 119, 6, 0.12)",
+          border: "rgba(217, 119, 6, 0.35)",
+          iconColor: "var(--accent)",
         };
     }
   };
@@ -104,10 +104,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               style={{
                 background: colors.bg,
                 border: `1px solid ${colors.border}`,
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
                 color: "var(--foreground)",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.10)",
               }}
             >
               <span

@@ -246,17 +246,6 @@ export default function OnboardingClient() {
         }
       `}</style>
 
-      {/* Background */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            theme === "dark"
-              ? "radial-gradient(ellipse at 30% 20%, rgba(76, 175, 130, 0.1) 0%, transparent 60%)"
-              : "radial-gradient(ellipse at 30% 20%, rgba(27, 94, 69, 0.07) 0%, transparent 60%)",
-        }}
-      />
-
       {/* Theme toggle */}
       <button
         onClick={toggleTheme}
@@ -276,7 +265,7 @@ export default function OnboardingClient() {
           className="h-full transition-all duration-500 ease-out"
           style={{
             width: `${(step / totalSteps) * 100}%`,
-            background: "var(--gradient-primary)",
+            background: "var(--accent)",
           }}
         />
       </div>
@@ -290,7 +279,7 @@ export default function OnboardingClient() {
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300"
                 style={{
-                  background: s <= step ? "var(--gradient-primary)" : "var(--surface)",
+                  background: s <= step ? "var(--primary)" : "var(--surface)",
                   color:
                     s <= step ? "var(--primary-foreground)" : "var(--foreground-muted)",
                   border: s <= step ? "none" : "1px solid var(--surface-border)",
@@ -333,7 +322,7 @@ export default function OnboardingClient() {
                     background: "var(--background-secondary)",
                     color: "var(--foreground)",
                     boxShadow: preferredName
-                      ? "0 0 0 2px var(--primary)"
+                      ? "0 0 0 2px var(--accent)"
                       : "0 0 0 1px var(--surface-border)",
                   }}
                 />
@@ -352,7 +341,7 @@ export default function OnboardingClient() {
                       style={{
                         background:
                           gender === g
-                            ? "var(--gradient-primary)"
+                            ? "var(--primary)"
                             : "var(--background-secondary)",
                         color:
                           gender === g
@@ -405,12 +394,12 @@ export default function OnboardingClient() {
                     style={{
                       borderRadius: "var(--radius-md)",
                       border: isSelected
-                        ? "2px solid var(--primary)"
+                        ? "2px solid var(--accent)"
                         : "1px solid var(--surface-border)",
                       background: isSelected
                         ? theme === "dark"
-                          ? "rgba(76, 175, 130, 0.12)"
-                          : "rgba(27, 94, 69, 0.08)"
+                          ? "rgba(217, 119, 6, 0.12)"
+                          : "rgba(217, 119, 6, 0.08)"
                         : undefined,
                     }}
                   >
@@ -418,7 +407,7 @@ export default function OnboardingClient() {
                       <div
                         className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-xs animate-bounce-in"
                         style={{
-                          background: "var(--primary)",
+                          background: "var(--accent)",
                           color: "white",
                         }}
                       >
@@ -491,7 +480,7 @@ export default function OnboardingClient() {
                     className="w-2 h-2 rounded-full transition-all duration-300"
                     style={{
                       background:
-                        n <= selectedHabits.length ? "var(--primary)" : "var(--surface-border)",
+                        n <= selectedHabits.length ? "var(--accent)" : "var(--surface-border)",
                     }}
                   />
                 ))}
@@ -587,9 +576,9 @@ export default function OnboardingClient() {
                       style={{
                         background:
                           theme === "dark"
-                            ? "rgba(76, 175, 130, 0.1)"
-                            : "rgba(27, 94, 69, 0.06)",
-                        border: "1px solid rgba(76, 175, 130, 0.2)",
+                            ? "rgba(217, 119, 6, 0.10)"
+                            : "rgba(217, 119, 6, 0.06)",
+                        border: "1px solid rgba(217, 119, 6, 0.2)",
                       }}
                     >
                       <div className="flex items-start gap-2 mb-2">
@@ -597,7 +586,7 @@ export default function OnboardingClient() {
                         <div>
                           <p
                             className="text-sm font-medium"
-                            style={{ color: "var(--primary)" }}
+                            style={{ color: "var(--accent)" }}
                           >
                             Suggested: {habit.suggestedAmount}
                           </p>
@@ -686,12 +675,12 @@ export default function OnboardingClient() {
               style={{
                 borderRadius: "var(--radius-lg)",
                 border: includeShawwal
-                  ? "2px solid rgba(201, 150, 58, 0.5)"
+                  ? "2px solid rgba(217, 119, 6, 0.5)"
                   : "1px solid var(--surface-border)",
                 background: includeShawwal
                   ? theme === "dark"
-                    ? "rgba(201, 150, 58, 0.08)"
-                    : "rgba(201, 150, 58, 0.05)"
+                    ? "rgba(217, 119, 6, 0.08)"
+                    : "rgba(217, 119, 6, 0.05)"
                   : undefined,
               }}
             >
@@ -706,7 +695,7 @@ export default function OnboardingClient() {
                 className="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
                 style={{
                   borderColor: includeShawwal ? "var(--accent)" : "var(--foreground-muted)",
-                  background: includeShawwal ? "var(--gradient-gold)" : "transparent",
+                  background: includeShawwal ? "var(--accent)" : "transparent",
                 }}
               >
                 {includeShawwal && <span className="text-white text-xs">✓</span>}
@@ -731,7 +720,7 @@ export default function OnboardingClient() {
                   <span className="text-xl">{habit.icon}</span>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm truncate">{habit.name}</h4>
-                    <p className="text-xs truncate" style={{ color: "var(--primary)" }}>
+                    <p className="text-xs truncate" style={{ color: "var(--accent)" }}>
                       Goal: {habit.acceptedAmount || habit.suggestedAmount || "To be set"}
                     </p>
                   </div>

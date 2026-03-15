@@ -99,8 +99,7 @@ export function BottomNav() {
                   <div
                     className="absolute inset-x-3 top-1.5 bottom-1.5 rounded-2xl transition-all duration-300"
                     style={{
-                      background: "var(--primary)",
-                      opacity: 0.1,
+                      background: "rgba(217, 119, 6, 0.10)",
                     }}
                   />
                 )}
@@ -108,7 +107,7 @@ export function BottomNav() {
                 <div
                   className="relative z-10 mb-0.5 transition-all duration-200"
                   style={{
-                    color: isActive ? "var(--primary)" : "var(--foreground-muted)",
+                    color: isActive ? "var(--accent)" : "var(--foreground-muted)",
                     opacity: isActive ? 1 : 0.55,
                     transform: isActive ? "scale(1.1)" : "scale(1)",
                   }}
@@ -121,7 +120,7 @@ export function BottomNav() {
                 <span
                   className="text-[10px] font-medium transition-colors duration-200 relative z-10"
                   style={{
-                    color: isActive ? "var(--primary)" : "var(--foreground-muted)",
+                    color: isActive ? "var(--accent)" : "var(--foreground-muted)",
                     opacity: isActive ? 1 : 0.6,
                   }}
                 >
@@ -148,13 +147,13 @@ export function BottomNav() {
                 className="flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200"
                 style={{
                   background: isActive
-                    ? "rgba(27, 94, 69, 0.12)"
+                    ? "rgba(217, 119, 6, 0.08)"
                     : "transparent",
                 }}
               >
                 <span
                   style={{
-                    color: isActive ? "var(--primary)" : "var(--foreground-muted)",
+                    color: isActive ? "var(--accent)" : "var(--foreground-muted)",
                     opacity: isActive ? 1 : 0.65,
                     display: "flex",
                     alignItems: "center",
@@ -167,7 +166,7 @@ export function BottomNav() {
                 <span
                   className="text-sm font-medium"
                   style={{
-                    color: isActive ? "var(--primary)" : "var(--foreground-muted)",
+                    color: isActive ? "var(--accent)" : "var(--foreground-muted)",
                   }}
                 >
                   {tab.name}

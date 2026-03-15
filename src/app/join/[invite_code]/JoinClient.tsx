@@ -72,14 +72,7 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
 
   if (loading) {
     return (
-      <main className="min-h-dvh flex items-center justify-center p-6 text-center relative">
-        <div
-          className="pointer-events-none fixed inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, #141210 0%, #1A2820 45%, #1E1A10 100%)",
-          }}
-        />
+      <main className="min-h-dvh flex items-center justify-center p-6 text-center relative" style={{ background: "var(--background)" }}>
         <div className="relative animate-pulse-soft">
           <div className="text-4xl mb-4 animate-float">🔍</div>
           <p style={{ color: "var(--foreground-muted)" }}>Finding circle...</p>
@@ -90,14 +83,7 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
 
   if (error) {
     return (
-      <main className="min-h-dvh flex flex-col items-center justify-center p-6 text-center relative">
-        <div
-          className="pointer-events-none fixed inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, #141210 0%, #1A2820 45%, #1E1A10 100%)",
-          }}
-        />
+      <main className="min-h-dvh flex flex-col items-center justify-center p-6 text-center relative" style={{ background: "var(--background)" }}>
         <div
           className="glass relative max-w-sm w-full p-8 animate-bounce-in"
           style={{ borderRadius: "var(--radius-xl)" }}
@@ -118,20 +104,7 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
   const isFull = halaqaInfo && halaqaInfo.member_count >= halaqaInfo.max_members;
 
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center p-6 relative">
-      {/* Sacred Dawn background */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, #141210 0%, #1A2820 45%, #1E1A10 100%)",
-        }}
-      />
-      <div
-        className="pointer-events-none fixed inset-0 pattern-bg"
-        style={{ opacity: 0.04 }}
-      />
-
+    <main className="min-h-dvh flex flex-col items-center justify-center p-6 relative" style={{ background: "var(--background)" }}>
       <div
         className="glass relative max-w-sm w-full p-8 text-center animate-bounce-in"
         style={{ borderRadius: "var(--radius-xl)" }}
@@ -149,19 +122,19 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
           {halaqaInfo?.name}
         </h1>
 
-        {/* Gold divider */}
+        {/* Amber divider */}
         <div
           className="h-px w-16 mx-auto mb-4"
-          style={{ background: "var(--gradient-gold)" }}
+          style={{ background: "var(--accent)" }}
         />
 
         {/* Capacity pill */}
         <div
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium mb-6"
           style={{
-            background: "rgba(76, 175, 130, 0.12)",
-            color: "var(--primary)",
-            border: "1px solid rgba(76, 175, 130, 0.2)",
+            background: "rgba(217, 119, 6, 0.10)",
+            color: "var(--accent)",
+            border: "1px solid rgba(217, 119, 6, 0.25)",
           }}
         >
           <span>👥</span>

@@ -289,17 +289,6 @@ export default function HalaqaClient() {
 
   return (
     <main className="relative min-h-dvh pb-24">
-      {/* Background */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            theme === "dark"
-              ? "radial-gradient(ellipse at 50% 0%, rgba(76, 175, 130, 0.08) 0%, transparent 50%)"
-              : "radial-gradient(ellipse at 50% 0%, rgba(27, 94, 69, 0.05) 0%, transparent 50%)",
-        }}
-      />
-
       <div className="relative z-10 max-w-lg mx-auto px-5 pt-6 sm:pt-24">
         {/* Tab switcher */}
         <div
@@ -400,7 +389,7 @@ export default function HalaqaClient() {
                             className="h-full rounded-full transition-all"
                             style={{
                               width: `${(lobby.member_count / lobby.max_members) * 100}%`,
-                              background: "var(--primary)",
+                              background: "var(--accent)",
                             }}
                           />
                         </div>
@@ -461,7 +450,7 @@ export default function HalaqaClient() {
                     style={{
                       background:
                         activeHalaqaId === hq.id
-                          ? "var(--gradient-primary)"
+                          ? "var(--primary)"
                           : "var(--surface)",
                       color:
                         activeHalaqaId === hq.id
@@ -495,7 +484,7 @@ export default function HalaqaClient() {
                 </p>
                 <p
                   className="text-sm italic mb-6"
-                  style={{ color: "var(--primary)" }}
+                  style={{ color: "var(--accent)" }}
                 >
                   Log your habits today, then witness your circle.
                 </p>
@@ -547,7 +536,7 @@ export default function HalaqaClient() {
                         style={{
                           background: member.completed_today
                             ? "var(--success)"
-                            : "var(--primary)",
+                            : "var(--foreground-muted)",
                           color: "white",
                           opacity: member.completed_today ? 1 : 0.7,
                         }}
@@ -623,7 +612,7 @@ export default function HalaqaClient() {
               style={{
                 background: "var(--background-secondary)",
                 color: "var(--foreground)",
-                boxShadow: newCircleName ? "0 0 0 2px var(--primary)" : "0 0 0 1px var(--surface-border)",
+                boxShadow: newCircleName ? "0 0 0 2px var(--accent)" : "0 0 0 1px var(--surface-border)",
               }}
               onKeyDown={(e) => e.key === "Enter" && createPrivateGroup()}
               autoFocus
