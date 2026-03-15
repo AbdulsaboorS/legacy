@@ -204,31 +204,17 @@ export default function HalaqaClient() {
       const inviteCode = crypto.randomUUID().replace(/-/g, "").substring(0, 6).toUpperCase();
       const circleName = newCircleName.trim();
 
-      const { data: newHalaqa, error: halaqaError } = await supabase
-        .from("halaqas")
-        .insert({
-          name: circleName,
-          created_by: user.id,
-          invite_code: inviteCode,
-          gender: userGender,
-          is_public: false,
-          max_members: 8,
-        })
-        .select()
-        .single();
+      const { data: newHalaqaId, error: halaqaError } = await supabase
+        .rpc('create_private_halaqa', {
+          p_name: circleName,
+          p_gender: userGender,
+          p_invite_code: inviteCode
+        });
 
       if (halaqaError) throw halaqaError;
-      createdHalaqaId = newHalaqa.id;
-
-      const { error: memberError } = await supabase.from("halaqa_members").insert({
-        halaqa_id: newHalaqa.id,
-        user_id: user.id,
-      });
-
-      if (memberError) throw memberError;
 
       activeHalaqaInitialized.current = true;
-      setActiveHalaqaId(newHalaqa.id);
+      setActiveHalaqaId(newHalaqaId);
       setActiveTab("mine");
       await loadData();
 
@@ -251,11 +237,6 @@ export default function HalaqaClient() {
       }
     } catch (error) {
       console.error("Failed to create circle:", error);
-      // Compensating delete if halaqa was created but member insert failed
-      if (createdHalaqaId) {
-        const supabase = createClient();
-        await supabase.from("halaqas").delete().eq("id", createdHalaqaId);
-      }
       toast.error("Failed to create circle. Please try again.");
     } finally {
       setNewCircleName("");
