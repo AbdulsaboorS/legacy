@@ -26,7 +26,11 @@ Seven phases. Web-first: finish circles, fix AI, polish flows, wire notification
   2. Circle detail has a working invite button (copy/share link).
   3. My Circles tab renders circle cards with member count, X/Y done today, avatar previews.
   4. Renders correctly on mobile, no layout overflow.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Refactor My Circles tab to circle card list + protect /halaqa in middleware
+- [ ] 01-02-PLAN.md — Create /halaqa/[id] circle detail page with stats, invite, and gated member list
 
 ### Phase 2: AI + Web Flow Fixes
 **Goal**: All AI functionality works end-to-end and every web screen is finalized before mobile starts.
