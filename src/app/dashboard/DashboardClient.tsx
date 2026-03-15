@@ -16,6 +16,7 @@ export default function DashboardClient() {
   const [userName, setUserName] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const [shawwalDaysCompleted, setShawwalDaysCompleted] = useState(0);
+  const [expandedMasterplan, setExpandedMasterplan] = useState<string | null>(null);
 
   const todayQuote = PROPHETIC_QUOTES[new Date().getDate() % PROPHETIC_QUOTES.length];
   const today = new Date().toISOString().split("T")[0];
@@ -521,69 +522,198 @@ export default function DashboardClient() {
         <div className="space-y-3 mb-6">
           {habits.map((habit, index) => {
             const isCompleted = todayLogs[habit.id];
+            const hasMasterplan = (habit.weekly_roadmap?.length ?? 0) > 0;
+            const isMasterplanOpen = expandedMasterplan === habit.id;
             return (
-              <button
+              <div
                 key={habit.id}
-                onClick={() => toggleHabit(habit.id)}
-                className="glass glass-hover w-full p-5 flex items-center gap-4 text-left cursor-pointer animate-slide-up transition-all duration-200"
-                style={{
-                  borderRadius: "var(--radius-lg)",
-                  animationDelay: `${index * 60}ms`,
-                  animationFillMode: "both",
-                  border: isCompleted
-                    ? "1px solid rgba(34, 197, 94, 0.35)"
-                    : "1px solid var(--surface-border)",
-                  background: isCompleted
-                    ? theme === "dark"
-                      ? "rgba(34, 197, 94, 0.07)"
-                      : "rgba(34, 197, 94, 0.05)"
-                    : undefined,
-                }}
+                className="animate-slide-up"
+                style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
               >
-                {/* Check circle */}
-                <div
-                  className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
+                <button
+                  onClick={() => toggleHabit(habit.id)}
+                  className="glass glass-hover w-full p-5 flex items-center gap-4 text-left cursor-pointer transition-all duration-200"
                   style={{
-                    background: isCompleted
-                      ? "var(--success)"
-                      : "var(--background-secondary)",
+                    borderRadius: hasMasterplan && isMasterplanOpen
+                      ? "var(--radius-lg) var(--radius-lg) 0 0"
+                      : "var(--radius-lg)",
                     border: isCompleted
-                      ? "none"
-                      : "2px solid var(--surface-border)",
+                      ? "1px solid rgba(34, 197, 94, 0.35)"
+                      : "1px solid var(--surface-border)",
+                    background: isCompleted
+                      ? theme === "dark"
+                        ? "rgba(34, 197, 94, 0.07)"
+                        : "rgba(34, 197, 94, 0.05)"
+                      : undefined,
                   }}
                 >
-                  {isCompleted ? (
-                    <span className="text-white font-bold animate-check">✓</span>
-                  ) : (
-                    <span className="text-xl">{habit.icon}</span>
+                  {/* Check circle */}
+                  <div
+                    className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
+                    style={{
+                      background: isCompleted ? "var(--success)" : "var(--background-secondary)",
+                      border: isCompleted ? "none" : "2px solid var(--surface-border)",
+                    }}
+                  >
+                    {isCompleted ? (
+                      <span className="text-white font-bold animate-check">✓</span>
+                    ) : (
+                      <span className="text-xl">{habit.icon}</span>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <h3
+                      className="font-medium transition-all duration-200"
+                      style={{ color: "var(--foreground)" }}
+                    >
+                      {habit.name}
+                    </h3>
+                    <p
+                      className="text-xs truncate mt-0.5"
+                      style={{ color: "var(--foreground-muted)" }}
+                    >
+                      {habit.accepted_amount || habit.suggested_amount || ""}
+                    </p>
+                  </div>
+
+                  {isCompleted && (
+                    <span
+                      className="text-xs font-semibold animate-bounce-in shrink-0"
+                      style={{ color: "var(--success)" }}
+                    >
+                      Done ✓
+                    </span>
                   )}
-                </div>
+                </button>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className="font-medium transition-all duration-200"
-                    style={{ color: "var(--foreground)" }}
-                  >
-                    {habit.name}
-                  </h3>
-                  <p
-                    className="text-xs truncate mt-0.5"
-                    style={{ color: "var(--foreground-muted)" }}
-                  >
-                    {habit.accepted_amount || habit.suggested_amount || ""}
-                  </p>
-                </div>
+                {/* Masterplan toggle + panel */}
+                {hasMasterplan && (
+                  <>
+                    <button
+                      onClick={() =>
+                        setExpandedMasterplan(isMasterplanOpen ? null : habit.id)
+                      }
+                      className="w-full flex items-center justify-between px-5 py-2 text-xs transition-all"
+                      style={{
+                        background: theme === "dark"
+                          ? "rgba(201, 150, 58, 0.07)"
+                          : "rgba(201, 150, 58, 0.05)",
+                        border: "1px solid rgba(201, 150, 58, 0.2)",
+                        borderTop: "none",
+                        borderRadius: isMasterplanOpen
+                          ? "0"
+                          : "0 0 var(--radius-lg) var(--radius-lg)",
+                        color: "var(--accent)",
+                      }}
+                    >
+                      <span>✨ AI Masterplan</span>
+                      <span
+                        className="transition-transform duration-200"
+                        style={{ transform: isMasterplanOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                      >
+                        ▾
+                      </span>
+                    </button>
 
-                {isCompleted && (
-                  <span
-                    className="text-xs font-semibold animate-bounce-in shrink-0"
-                    style={{ color: "var(--success)" }}
-                  >
-                    Done ✓
-                  </span>
+                    {isMasterplanOpen && (
+                      <div
+                        className="glass p-5 space-y-4 animate-fade-in"
+                        style={{
+                          borderRadius: "0 0 var(--radius-lg) var(--radius-lg)",
+                          border: "1px solid rgba(201, 150, 58, 0.15)",
+                          borderTop: "none",
+                        }}
+                      >
+                        {/* Core philosophy */}
+                        {habit.core_philosophy && (
+                          <div>
+                            <p
+                              className="text-xs font-semibold uppercase tracking-wider mb-1"
+                              style={{ color: "var(--accent)" }}
+                            >
+                              Core Philosophy
+                            </p>
+                            <p className="text-sm italic" style={{ color: "var(--foreground-muted)" }}>
+                              {habit.core_philosophy}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Actionable steps */}
+                        {(habit.actionable_steps?.length ?? 0) > 0 && (
+                          <div>
+                            <p
+                              className="text-xs font-semibold uppercase tracking-wider mb-2"
+                              style={{ color: "var(--primary)" }}
+                            >
+                              Action Steps
+                            </p>
+                            <div className="space-y-2">
+                              {habit.actionable_steps!.map((step, i) => (
+                                <div key={i} className="flex gap-2">
+                                  <span
+                                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                                    style={{
+                                      background: "var(--gradient-primary)",
+                                      color: "white",
+                                    }}
+                                  >
+                                    {i + 1}
+                                  </span>
+                                  <div>
+                                    <p className="text-sm font-medium">{step.step}</p>
+                                    <p className="text-xs" style={{ color: "var(--foreground-muted)" }}>
+                                      {step.description}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Weekly roadmap */}
+                        <div>
+                          <p
+                            className="text-xs font-semibold uppercase tracking-wider mb-2"
+                            style={{ color: "var(--primary)" }}
+                          >
+                            4-Week Roadmap
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {habit.weekly_roadmap!.map((week) => (
+                              <div
+                                key={week.week}
+                                className="p-3 rounded-lg"
+                                style={{
+                                  background: "var(--background-secondary)",
+                                  border: "1px solid var(--surface-border)",
+                                }}
+                              >
+                                <p
+                                  className="text-xs font-bold mb-0.5"
+                                  style={{ color: "var(--accent)" }}
+                                >
+                                  Week {week.week}
+                                </p>
+                                <p className="text-xs font-medium">{week.focus}</p>
+                                <p
+                                  className="text-xs mt-0.5"
+                                  style={{ color: "var(--foreground-muted)" }}
+                                >
+                                  {week.target}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>

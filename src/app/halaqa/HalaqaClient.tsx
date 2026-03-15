@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
@@ -35,6 +35,7 @@ export default function HalaqaClient() {
   const [newCircleName, setNewCircleName] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
+  const activeHalaqaInitialized = useRef(false);
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
@@ -76,8 +77,9 @@ export default function HalaqaClient() {
 
       if (halaqasData) {
         setMyHalaqas(halaqasData);
-        if (halaqasData.length > 0 && !activeHalaqaId) {
+        if (halaqasData.length > 0 && !activeHalaqaInitialized.current) {
           setActiveHalaqaId(halaqasData[0].id);
+          activeHalaqaInitialized.current = true;
         }
       }
     } else {
@@ -101,7 +103,7 @@ export default function HalaqaClient() {
     }
 
     setLoading(false);
-  }, [router, today, activeHalaqaId]);
+  }, [router, today]);
 
   useEffect(() => {
     loadData();
@@ -163,19 +165,28 @@ export default function HalaqaClient() {
 
   const joinLobby = async (halaqaId: string) => {
     setSavingAction(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from("halaqa_members").insert({
-        halaqa_id: halaqaId,
-        user_id: user.id,
-      });
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from("halaqa_members").upsert(
+        { halaqa_id: halaqaId, user_id: user.id },
+        { onConflict: "halaqa_id,user_id", ignoreDuplicates: true }
+      );
+      if (error) throw error;
+
+      activeHalaqaInitialized.current = true;
       setActiveHalaqaId(halaqaId);
       setActiveTab("mine");
       await loadData();
       toast.success("Joined! Welcome to the circle 🤝");
+    } catch (error) {
+      console.error("Failed to join circle:", error);
+      toast.error("Failed to join. Please try again.");
+    } finally {
+      setSavingAction(false);
     }
-    setSavingAction(false);
   };
 
   const createPrivateGroup = async () => {
@@ -184,15 +195,19 @@ export default function HalaqaClient() {
     setShowCreateModal(false);
 
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    let createdHalaqaId: string | null = null;
 
-    if (user) {
-      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-      const { data: newHalaqa, error } = await supabase
+      const inviteCode = crypto.randomUUID().replace(/-/g, "").substring(0, 6).toUpperCase();
+      const circleName = newCircleName.trim();
+
+      const { data: newHalaqa, error: halaqaError } = await supabase
         .from("halaqas")
         .insert({
-          name: newCircleName.trim(),
+          name: circleName,
           created_by: user.id,
           invite_code: inviteCode,
           gender: userGender,
@@ -202,39 +217,50 @@ export default function HalaqaClient() {
         .select()
         .single();
 
-      if (newHalaqa && !error) {
-        await supabase.from("halaqa_members").insert({
-          halaqa_id: newHalaqa.id,
-          user_id: user.id,
-        });
+      if (halaqaError) throw halaqaError;
+      createdHalaqaId = newHalaqa.id;
 
-        setActiveHalaqaId(newHalaqa.id);
-        setActiveTab("mine");
-        await loadData();
+      const { error: memberError } = await supabase.from("halaqa_members").insert({
+        halaqa_id: newHalaqa.id,
+        user_id: user.id,
+      });
 
-        // Share invite link via clipboard or native share
-        const url = `${window.location.origin}/join/${inviteCode}`;
-        if (navigator.share) {
-          navigator
-            .share({
-              title: "Join my Legacy Circle",
-              text: `Hold me accountable post-Ramadan. Join my circle: ${newCircleName.trim()}`,
-              url,
-            })
-            .catch(console.error);
-        } else {
-          try {
-            await navigator.clipboard.writeText(url);
-            toast.copied("Invite link copied to clipboard!");
-          } catch {
-            toast.info(`Invite code: ${inviteCode}`);
-          }
+      if (memberError) throw memberError;
+
+      activeHalaqaInitialized.current = true;
+      setActiveHalaqaId(newHalaqa.id);
+      setActiveTab("mine");
+      await loadData();
+
+      const url = `${window.location.origin}/join/${inviteCode}`;
+      if (navigator.share) {
+        navigator
+          .share({
+            title: "Join my Legacy Circle",
+            text: `Hold me accountable post-Ramadan. Join my circle: ${circleName}`,
+            url,
+          })
+          .catch(console.error);
+      } else {
+        try {
+          await navigator.clipboard.writeText(url);
+          toast.copied("Invite link copied to clipboard!");
+        } catch {
+          toast.info(`Invite code: ${inviteCode}`);
         }
       }
+    } catch (error) {
+      console.error("Failed to create circle:", error);
+      // Compensating delete if halaqa was created but member insert failed
+      if (createdHalaqaId) {
+        const supabase = createClient();
+        await supabase.from("halaqas").delete().eq("id", createdHalaqaId);
+      }
+      toast.error("Failed to create circle. Please try again.");
+    } finally {
+      setNewCircleName("");
+      setCreating(false);
     }
-
-    setNewCircleName("");
-    setCreating(false);
   };
 
   const sendReaction = async (receiverId: string, emoji: string) => {

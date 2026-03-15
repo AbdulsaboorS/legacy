@@ -6,6 +6,17 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export interface WeekEntry {
+  week: number;
+  focus: string;
+  target: string;
+}
+
+export interface ActionableStep {
+  step: string;
+  description: string;
+}
+
 export interface Habit {
   id: string;
   user_id: string;
@@ -16,6 +27,9 @@ export interface Habit {
   accepted_amount: string | null;
   is_active: boolean;
   created_at: string;
+  core_philosophy?: string | null;
+  actionable_steps?: ActionableStep[] | null;
+  weekly_roadmap?: WeekEntry[] | null;
 }
 
 export interface HabitLog {

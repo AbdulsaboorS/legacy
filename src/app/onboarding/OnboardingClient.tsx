@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PRESET_HABITS, type PresetHabit } from "@/lib/types";
+import { PRESET_HABITS, type PresetHabit, type ActionableStep, type WeekEntry } from "@/lib/types";
 import { useTheme } from "@/components/ThemeProvider";
 import { useToast } from "@/components/Toast";
 
@@ -14,6 +14,9 @@ interface SelectedHabit extends PresetHabit {
   tip?: string;
   acceptedAmount?: string;
   isLoadingSuggestion?: boolean;
+  corePhilosophy?: string;
+  actionableSteps?: ActionableStep[];
+  weeklyRoadmap?: WeekEntry[];
 }
 
 export default function OnboardingClient() {
@@ -29,7 +32,6 @@ export default function OnboardingClient() {
   const [customHabitIcon, setCustomHabitIcon] = useState("✨");
   const [includeShawwal, setIncludeShawwal] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
   // Shake ref for 3-habit limit feedback
   const gridRef = useRef<HTMLDivElement>(null);
@@ -98,15 +100,43 @@ export default function OnboardingClient() {
     });
 
     try {
-      const res = await fetch("/api/ai/suggest", {
+      const res = await fetch("/api/ai/masterplan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           habitName: habit.name,
           ramadanAmount: habit.ramadanAmount,
+          acceptedAmount: habit.acceptedAmount || "",
+          gender,
         }),
       });
-      const data = await res.json();
+
+      if (!res.body) throw new Error("No response body");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6);
+          if (payload === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(payload);
+            if (parsed.text) accumulated += parsed.text;
+          } catch {
+            // partial chunk, continue
+          }
+        }
+      }
+
+      const data = JSON.parse(accumulated);
       setSelectedHabits((prev) => {
         const updated = [...prev];
         updated[index] = {
@@ -115,6 +145,9 @@ export default function OnboardingClient() {
           motivation: data.motivation || "",
           tip: data.tip || "",
           acceptedAmount: data.suggestedAmount || "",
+          corePhilosophy: data.corePhilosophy || "",
+          actionableSteps: data.actionableSteps || [],
+          weeklyRoadmap: data.weeklyRoadmap || [],
           isLoadingSuggestion: false,
         };
         return updated;
@@ -136,22 +169,15 @@ export default function OnboardingClient() {
   };
 
   useEffect(() => {
-    if (step === 3 && selectedHabits.length > 0) {
-      const fetchNext = async () => {
-        if (currentSuggestionIndex < selectedHabits.length) {
-          const habit = selectedHabits[currentSuggestionIndex];
-          if (!habit.suggestedAmount && !habit.isLoadingSuggestion) {
-            await fetchSuggestion(currentSuggestionIndex);
-            setCurrentSuggestionIndex((prev) => prev + 1);
-          } else {
-            setCurrentSuggestionIndex((prev) => prev + 1);
-          }
-        }
-      };
-      fetchNext();
-    }
+    if (step !== 3 || selectedHabits.length === 0) return;
+    // Fire all suggestions in parallel — no sequential index state machine
+    const indicesToFetch = selectedHabits
+      .map((h, i) => i)
+      .filter((i) => !selectedHabits[i].suggestedAmount && !selectedHabits[i].isLoadingSuggestion);
+    if (indicesToFetch.length === 0) return;
+    Promise.all(indicesToFetch.map((i) => fetchSuggestion(i)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, currentSuggestionIndex]);
+  }, [step]);
 
   const saveHabits = async () => {
     setIsSaving(true);
@@ -180,23 +206,29 @@ export default function OnboardingClient() {
         suggested_amount: habit.suggestedAmount || null,
         accepted_amount: habit.acceptedAmount || habit.suggestedAmount || null,
         is_active: true,
+        core_philosophy: habit.corePhilosophy || null,
+        actionable_steps: habit.actionableSteps?.length ? habit.actionableSteps : null,
+        weekly_roadmap: habit.weeklyRoadmap?.length ? habit.weeklyRoadmap : null,
       }));
 
-      const { error: habitsError } = await supabase.from("habits").insert(habitsToInsert);
+      const { error: habitsError } = await supabase
+        .from("habits")
+        .upsert(habitsToInsert, { onConflict: "user_id,name" });
       if (habitsError) throw habitsError;
 
-      const { error: streakError } = await supabase.from("streaks").insert({
-        user_id: user.id,
-        current_streak: 0,
-        longest_streak: 0,
-        total_completions: 0,
-      });
-
+      const { error: streakError } = await supabase
+        .from("streaks")
+        .upsert(
+          { user_id: user.id, current_streak: 0, longest_streak: 0, total_completions: 0 },
+          { onConflict: "user_id", ignoreDuplicates: true }
+        );
       if (streakError) throw streakError;
 
       router.push("/dashboard");
     } catch (error) {
       console.error("Failed to save habits:", error);
+      toast.error("Failed to save your habits. Please try again.");
+    } finally {
       setIsSaving(false);
     }
   };
