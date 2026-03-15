@@ -277,7 +277,7 @@ export default function SettingsClient() {
           </h2>
           <button
             onClick={handleSignOut}
-            className="glass glass-hover w-full p-4 flex items-center gap-3 cursor-pointer transition-all"
+            className="glass glass-hover w-full p-4 flex items-center gap-3 cursor-pointer transition-all mb-3"
             style={{
               borderRadius: "var(--radius-lg)",
               border: "1px solid rgba(239, 68, 68, 0.2)",
@@ -291,6 +291,38 @@ export default function SettingsClient() {
               👋
             </span>
             <span className="font-medium">Sign Out</span>
+          </button>
+
+          <button
+            onClick={async () => {
+              if (!confirm("DEV MODE: Are you sure you want to nuke your DB rows? This will delete all your habits, streaks, and circles so you can test Onboarding again.")) return;
+              const supabase = createClient();
+              const { data: { user } } = await supabase.auth.getUser();
+              if (!user) return;
+              
+              await Promise.all([
+                supabase.from("habits").delete().eq("user_id", user.id),
+                supabase.from("streaks").delete().eq("user_id", user.id),
+                supabase.from("halaqa_members").delete().eq("user_id", user.id)
+              ]);
+              
+              router.push("/onboarding");
+            }}
+            className="glass w-full p-4 flex items-center gap-3 cursor-pointer transition-all"
+            style={{
+              borderRadius: "var(--radius-lg)",
+              border: "1px dashed rgba(245, 158, 11, 0.4)",
+              color: "#F59E0B",
+              background: "rgba(245, 158, 11, 0.05)",
+            }}
+          >
+            <span
+              className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
+              style={{ background: "rgba(245, 158, 11, 0.1)" }}
+            >
+              ⚠️
+            </span>
+            <span className="font-medium">Reset Account (Dev Mode)</span>
           </button>
         </section>
 
