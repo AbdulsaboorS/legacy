@@ -1,0 +1,87 @@
+# Requirements: Legacy — Eid Launch Sprint
+
+## Overview
+
+Active requirements for the Eid al-Fitr 2026 launch (March 20-21). Validated features (Phase 1+2) are already shipped. This document covers the 7 remaining capabilities needed for launch.
+
+---
+
+## Categories
+
+### CIRCLE — Accountability Circle Features
+
+**CIRCLE-01**: User can view a dedicated circle detail page at `/halaqa/[id]` showing member board, individual member stats, and today's completion status for each member.
+
+**CIRCLE-02**: Circle detail page displays an invite button/link so the circle owner can share access with new members.
+
+**CIRCLE-03**: My Circles tab renders each circle as a card showing member count, X/Y members done today, and avatar previews for members.
+
+### NOTIF — Push Notifications
+
+**NOTIF-01**: User can opt in to push notifications and receive a daily habit reminder at a chosen time.
+
+**NOTIF-02**: User receives a push nudge when their circle has activity (members completing habits), surfacing circle momentum.
+
+### SHARE — Streak Milestone Sharing
+
+**SHARE-01**: At 7, 14, and 30-day streak milestones, a polished share card is presented to the user with their streak count and habit name.
+
+**SHARE-02**: User can share the milestone card via native share sheet (Web Share API) or download it as an image.
+
+### JOIN — Join Page Polish
+
+**JOIN-01**: `/join/[invite_code]` page is redesigned to match the current editorial design system (Cormorant Garamond headings, amber accent, inline styles).
+
+**JOIN-02**: Join page shows circle name, member count, and a clear call-to-action before requiring sign-in, so the user understands what they are joining.
+
+### PWA — Performance and PWA Hardening
+
+**PWA-01**: App works offline — cached pages render, check-ins queue and sync when connectivity returns.
+
+**PWA-02**: Install prompt appears at an appropriate moment (post first check-in or after 2+ sessions) rather than immediately on load.
+
+**PWA-03**: Lighthouse PWA score reaches 90+ and performance score reaches 80+ on mobile.
+
+### LAUNCH — Launch Readiness
+
+**LAUNCH-01**: All pages have correct `<title>`, `<meta description>`, and Open Graph tags that produce clean previews when shared on WhatsApp and Twitter/X.
+
+**LAUNCH-02**: Analytics are instrumented (page views, check-in events, circle creates) so post-launch behavior is observable.
+
+**LAUNCH-03**: Error monitoring (Sentry or equivalent) is active in production, capturing unhandled exceptions and surfacing them to the developer.
+
+---
+
+## Summary
+
+| Category | Count | IDs |
+|----------|-------|-----|
+| CIRCLE | 3 | CIRCLE-01, CIRCLE-02, CIRCLE-03 |
+| NOTIF | 2 | NOTIF-01, NOTIF-02 |
+| SHARE | 2 | SHARE-01, SHARE-02 |
+| JOIN | 2 | JOIN-01, JOIN-02 |
+| PWA | 3 | PWA-01, PWA-02, PWA-03 |
+| LAUNCH | 3 | LAUNCH-01, LAUNCH-02, LAUNCH-03 |
+| **Total** | **15** | |
+
+---
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| CIRCLE-01 | Phase 1 | Pending |
+| CIRCLE-02 | Phase 1 | Pending |
+| CIRCLE-03 | Phase 1 | Pending |
+| NOTIF-01 | Phase 2 | Pending |
+| NOTIF-02 | Phase 2 | Pending |
+| SHARE-01 | Phase 3 | Pending |
+| SHARE-02 | Phase 3 | Pending |
+| JOIN-01 | Phase 3 | Pending |
+| JOIN-02 | Phase 3 | Pending |
+| PWA-01 | Phase 4 | Pending |
+| PWA-02 | Phase 4 | Pending |
+| PWA-03 | Phase 4 | Pending |
+| LAUNCH-01 | Phase 5 | Pending |
+| LAUNCH-02 | Phase 5 | Pending |
+| LAUNCH-03 | Phase 5 | Pending |
