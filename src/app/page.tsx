@@ -28,104 +28,157 @@ export default function LandingPage() {
 
   return (
     <main
-      className="relative min-h-dvh flex flex-col items-center justify-center overflow-hidden px-6"
-      style={{ background: "var(--background)" }}
+      style={{
+        minHeight: "100dvh",
+        background: "var(--background)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "60px 24px",
+        position: "relative",
+        overflow: "hidden",
+      }}
     >
       {/* Theme toggle */}
       <button
         onClick={toggleTheme}
-        className="fixed top-6 right-6 z-50 glass glass-hover p-3 cursor-pointer"
-        style={{ borderRadius: "var(--radius-full)" }}
+        className="glass glass-hover cursor-pointer"
+        style={{
+          position: "fixed",
+          top: "24px",
+          right: "24px",
+          zIndex: 50,
+          padding: "12px",
+          borderRadius: "var(--radius-full)",
+          border: "none",
+          fontSize: "1rem",
+        }}
         aria-label="Toggle theme"
       >
         {theme === "dark" ? "☀️" : "🌙"}
       </button>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-md w-full animate-fade-in">
+      {/* Content column */}
+      <div
+        className="animate-fade-in"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          maxWidth: "680px",
+          width: "100%",
+        }}
+      >
         {/* Bismillah */}
         <div
-          className="mb-3 text-3xl animate-float"
+          className="animate-float"
           style={{
             fontFamily: "var(--font-arabic)",
+            fontSize: "3.5rem",
             color: "var(--accent)",
+            lineHeight: 1,
+            marginBottom: "48px",
           }}
         >
           بِسْمِ ٱللَّٰهِ
         </div>
 
-        {/* App pill */}
-        <div
-          className="mb-6 px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase"
-          style={{
-            color: "var(--accent)",
-            border: "1px solid rgba(217, 119, 6, 0.35)",
-            background: "rgba(217, 119, 6, 0.06)",
-          }}
-        >
-          Legacy
-        </div>
-
         {/* Heading */}
         <h1
-          className="text-5xl sm:text-6xl mb-4 leading-tight tracking-tight"
           style={{
             fontFamily: "var(--font-serif)",
             fontWeight: 300,
+            fontSize: "clamp(2.8rem, 7vw, 5rem)",
+            lineHeight: 1.08,
             color: "var(--foreground)",
+            marginBottom: "32px",
           }}
         >
-          Expand on your<br />
-          Ramadan&nbsp;
-          <span style={{ color: "var(--accent)", fontStyle: "italic" }}>
+          Expand on your Ramadan<br />
+          <span style={{ fontStyle: "italic", color: "var(--accent)" }}>
             Legacy
           </span>
         </h1>
 
         {/* Subtitle */}
         <p
-          className="text-base mb-6 max-w-xs"
-          style={{ color: "var(--foreground-muted)" }}
-        >
-          Build sustainable habits beyond Ramadan with AI-powered guidance,
-          accountability circles, and Prophetic motivation.
-        </p>
-
-        {/* Feature pills */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {["✨ AI Step-Down", "👥 Halaqa Circles", "🔥 Streak Tracking"].map(
-            (f) => (
-              <span
-                key={f}
-                className="px-3 py-1.5 rounded-full text-xs font-medium"
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(217, 119, 6, 0.3)",
-                  color: "var(--foreground-muted)",
-                }}
-              >
-                {f}
-              </span>
-            )
-          )}
-        </div>
-
-        {/* Hadith quote card — left amber border */}
-        <div
-          className="mb-8 py-4 px-5 text-sm max-w-sm w-full text-left"
           style={{
-            borderLeft: "3px solid var(--accent)",
+            fontSize: "1rem",
             color: "var(--foreground-muted)",
-            fontStyle: "italic",
+            lineHeight: 1.7,
+            maxWidth: "42ch",
+            marginBottom: "56px",
           }}
         >
-          <p>
+          Sustainable spiritual habits built with precision,
+          accountability, and AI-powered guidance.
+        </p>
+
+        {/* Feature tags */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "12px",
+            marginBottom: "72px",
+          }}
+        >
+          {["AI Step-Down", "Halaqa Circles", "Streak Sync"].map((f) => (
+            <span
+              key={f}
+              style={{
+                padding: "8px 20px",
+                fontSize: "0.65rem",
+                fontWeight: 600,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "var(--foreground-muted)",
+                border: "1px solid var(--surface-border)",
+                borderRadius: "3px",
+              }}
+            >
+              {f}
+            </span>
+          ))}
+        </div>
+
+        {/* Hadith quote card */}
+        <div
+          style={{
+            maxWidth: "520px",
+            width: "100%",
+            borderLeft: "2px solid var(--accent)",
+            padding: "24px 32px",
+            background: "var(--background-secondary)",
+            borderRadius: "0 4px 4px 0",
+            textAlign: "left",
+            marginBottom: "72px",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontStyle: "italic",
+              fontSize: "1.1rem",
+              color: "var(--foreground)",
+              lineHeight: 1.65,
+              marginBottom: "12px",
+            }}
+          >
             &ldquo;The most beloved of deeds to Allah are those that are most
             consistent, even if it is small.&rdquo;
           </p>
           <span
-            className="block mt-1.5 text-xs font-medium not-italic"
-            style={{ color: "var(--accent)" }}
+            style={{
+              fontSize: "0.65rem",
+              fontWeight: 600,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+            }}
           >
             — Sahih al-Bukhari
           </span>
@@ -135,49 +188,59 @@ export default function LandingPage() {
         <button
           onClick={handleSignIn}
           id="google-sign-in"
-          className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-semibold text-base mb-4 transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
+          className="active:scale-[0.98]"
           style={{
+            width: "100%",
+            maxWidth: "520px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "12px",
+            padding: "18px 24px",
+            borderRadius: "6px",
+            fontWeight: 600,
+            fontSize: "1rem",
             background: "#FFFFFF",
             color: "#1C1A14",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
+            boxShadow: "0 2px 16px rgba(0,0,0,0.08)",
             border: "1px solid rgba(0,0,0,0.08)",
+            cursor: "pointer",
+            marginBottom: "20px",
+            transition: "all 0.2s ease",
           }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-              fill="#4285F4"
-            />
-            <path
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              fill="#34A853"
-            />
-            <path
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              fill="#EA4335"
-            />
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
           </svg>
           Continue with Google
         </button>
 
-        {/* Privacy trust badge */}
+        {/* Privacy note */}
         <p
-          className="text-xs flex items-center gap-1.5 justify-center"
-          style={{ color: "var(--foreground-muted)", opacity: 0.7 }}
+          style={{
+            fontSize: "0.75rem",
+            color: "var(--foreground-muted)",
+            opacity: 0.55,
+          }}
         >
-          <span>🛡️</span>
-          No ads. No data sales. Ever.
+          🛡️ No ads. No data sales. Ever.
         </p>
       </div>
 
       {/* Bottom accent line */}
       <div
-        className="fixed bottom-0 left-0 right-0 h-px"
-        style={{ background: "var(--accent)", opacity: 0.35 }}
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "1px",
+          background: "var(--accent)",
+          opacity: 0.3,
+        }}
       />
     </main>
   );

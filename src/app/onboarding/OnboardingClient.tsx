@@ -19,6 +19,55 @@ interface SelectedHabit extends PresetHabit {
   weeklyRoadmap?: WeekEntry[];
 }
 
+// ─── Shared style tokens ───────────────────────────────────────────────────────
+const S = {
+  labelSmall: {
+    display: "block" as const,
+    fontSize: "0.65rem",
+    fontWeight: 700,
+    letterSpacing: "0.16em",
+    textTransform: "uppercase" as const,
+    color: "var(--foreground-muted)",
+    marginBottom: "10px",
+  },
+  inputBase: {
+    width: "100%",
+    height: "52px",
+    padding: "0 16px",
+    fontSize: "1rem",
+    outline: "none",
+    boxSizing: "border-box" as const,
+    background: "var(--background-secondary)",
+    color: "var(--foreground)",
+    borderRadius: "10px",
+    transition: "border-color 0.2s",
+  },
+  btnAmber: {
+    background: "var(--accent)",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "999px",
+    padding: "14px 32px",
+    fontWeight: 700,
+    fontSize: "0.8rem",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase" as const,
+    cursor: "pointer",
+    whiteSpace: "nowrap" as const,
+  },
+  btnBack: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase" as const,
+    color: "var(--foreground-muted)",
+    padding: "14px 0",
+  },
+};
+
 export default function OnboardingClient() {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
@@ -29,56 +78,41 @@ export default function OnboardingClient() {
   const [step, setStep] = useState(1);
   const [selectedHabits, setSelectedHabits] = useState<SelectedHabit[]>([]);
   const [customHabitName, setCustomHabitName] = useState("");
-  const [customHabitIcon, setCustomHabitIcon] = useState("✨");
   const [includeShawwal, setIncludeShawwal] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Shake ref for 3-habit limit feedback
   const gridRef = useRef<HTMLDivElement>(null);
-
-  const totalSteps = 4;
   const MAX_HABITS = 3;
 
+  // ─── Shake animation on limit ─────────────────────────────────────────────
   const shakeGrid = () => {
     if (gridRef.current) {
       gridRef.current.style.animation = "none";
-      gridRef.current.offsetHeight; // trigger reflow
+      void gridRef.current.offsetHeight;
       gridRef.current.style.animation = "shake 0.4s ease";
-      setTimeout(() => {
-        if (gridRef.current) gridRef.current.style.animation = "";
-      }, 400);
+      setTimeout(() => { if (gridRef.current) gridRef.current.style.animation = ""; }, 400);
     }
     toast.error("Focus on 3 habits for the best results");
   };
 
+  // ─── Habit selection ─────────────────────────────────────────────────────
   const toggleHabit = (habit: PresetHabit) => {
     setSelectedHabits((prev) => {
       const exists = prev.find((h) => h.name === habit.name);
       if (exists) return prev.filter((h) => h.name !== habit.name);
-      if (prev.length >= MAX_HABITS) {
-        shakeGrid();
-        return prev;
-      }
+      if (prev.length >= MAX_HABITS) { shakeGrid(); return prev; }
       return [...prev, { ...habit, ramadanAmount: habit.defaultRamadanAmount }];
     });
   };
 
   const addCustomHabit = () => {
     if (!customHabitName.trim()) return;
-    if (selectedHabits.length >= MAX_HABITS) {
-      shakeGrid();
-      return;
-    }
-    const customHabit: SelectedHabit = {
-      name: customHabitName.trim(),
-      icon: customHabitIcon,
-      defaultRamadanAmount: "",
-      category: "lifestyle",
-      ramadanAmount: "",
-    };
-    setSelectedHabits((prev) => [...prev, customHabit]);
+    if (selectedHabits.length >= MAX_HABITS) { shakeGrid(); return; }
+    setSelectedHabits((prev) => [...prev, {
+      name: customHabitName.trim(), icon: "✨",
+      defaultRamadanAmount: "", category: "lifestyle", ramadanAmount: "",
+    }]);
     setCustomHabitName("");
-    setCustomHabitIcon("✨");
   };
 
   const updateRamadanAmount = (index: number, amount: string) => {
@@ -89,58 +123,42 @@ export default function OnboardingClient() {
     });
   };
 
+  // ─── AI suggestion fetch ─────────────────────────────────────────────────
   const fetchSuggestion = async (index: number) => {
     const habit = selectedHabits[index];
     if (!habit.ramadanAmount) return;
 
     setSelectedHabits((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], isLoadingSuggestion: true };
-      return updated;
+      const u = [...prev]; u[index] = { ...u[index], isLoadingSuggestion: true }; return u;
     });
 
     try {
       const res = await fetch("/api/ai/masterplan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          habitName: habit.name,
-          ramadanAmount: habit.ramadanAmount,
-          acceptedAmount: habit.acceptedAmount || "",
-          gender,
-        }),
+        body: JSON.stringify({ habitName: habit.name, ramadanAmount: habit.ramadanAmount, acceptedAmount: habit.acceptedAmount || "", gender }),
       });
-
-      if (!res.body) throw new Error("No response body");
+      if (!res.body) throw new Error("No body");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let accumulated = "";
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-        for (const line of lines) {
+        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6);
           if (payload === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(payload);
-            if (parsed.text) accumulated += parsed.text;
-          } catch {
-            // partial chunk, continue
-          }
+          try { const p = JSON.parse(payload); if (p.text) accumulated += p.text; } catch { /* partial */ }
         }
       }
 
       const data = JSON.parse(accumulated);
       setSelectedHabits((prev) => {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
+        const u = [...prev];
+        u[index] = {
+          ...u[index],
           suggestedAmount: data.suggestedAmount || "Start small and build up",
           motivation: data.motivation || "",
           tip: data.tip || "",
@@ -150,79 +168,58 @@ export default function OnboardingClient() {
           weeklyRoadmap: data.weeklyRoadmap || [],
           isLoadingSuggestion: false,
         };
-        return updated;
+        return u;
       });
     } catch {
       setSelectedHabits((prev) => {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
+        const u = [...prev];
+        u[index] = {
+          ...u[index],
           suggestedAmount: "Start with a small, consistent amount",
           motivation: "Consistency is key in Islam.",
           tip: "Set a specific time each day for this habit.",
           acceptedAmount: "Start with a small, consistent amount",
           isLoadingSuggestion: false,
         };
-        return updated;
+        return u;
       });
     }
   };
 
   useEffect(() => {
     if (step !== 3 || selectedHabits.length === 0) return;
-    // Fire all suggestions in parallel — no sequential index state machine
-    const indicesToFetch = selectedHabits
-      .map((h, i) => i)
-      .filter((i) => !selectedHabits[i].suggestedAmount && !selectedHabits[i].isLoadingSuggestion);
-    if (indicesToFetch.length === 0) return;
-    Promise.all(indicesToFetch.map((i) => fetchSuggestion(i)));
+    const toFetch = selectedHabits.map((_, i) => i).filter((i) => !selectedHabits[i].suggestedAmount && !selectedHabits[i].isLoadingSuggestion);
+    if (toFetch.length === 0) return;
+    Promise.all(toFetch.map((i) => fetchSuggestion(i)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  // ─── Save ─────────────────────────────────────────────────────────────────
   const saveHabits = async () => {
     setIsSaving(true);
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/"); return; }
 
-      if (!user) {
-        router.push("/");
-        return;
-      }
+      await supabase.from("profiles").upsert({ id: user.id, preferred_name: preferredName, gender: gender as "Brother" | "Sister" });
 
-      const { error: profileError } = await supabase.from("profiles").upsert({
-        id: user.id,
-        preferred_name: preferredName,
-        gender: gender as "Brother" | "Sister",
-      });
-
-      if (profileError) throw profileError;
-
-      const habitsToInsert = selectedHabits.map((habit) => ({
-        user_id: user.id,
-        name: habit.name,
-        icon: habit.icon,
-        ramadan_amount: habit.ramadanAmount,
-        suggested_amount: habit.suggestedAmount || null,
-        accepted_amount: habit.acceptedAmount || habit.suggestedAmount || null,
-        is_active: true,
-        core_philosophy: habit.corePhilosophy || null,
-        actionable_steps: habit.actionableSteps?.length ? habit.actionableSteps : null,
-        weekly_roadmap: habit.weeklyRoadmap?.length ? habit.weeklyRoadmap : null,
+      const habitsToInsert = selectedHabits.map((h) => ({
+        user_id: user.id, name: h.name, icon: h.icon,
+        ramadan_amount: h.ramadanAmount, suggested_amount: h.suggestedAmount || null,
+        accepted_amount: h.acceptedAmount || h.suggestedAmount || null, is_active: true,
+        core_philosophy: h.corePhilosophy || null,
+        actionable_steps: h.actionableSteps?.length ? h.actionableSteps : null,
+        weekly_roadmap: h.weeklyRoadmap?.length ? h.weeklyRoadmap : null,
       }));
 
-      const { error: habitsError } = await supabase
-        .from("habits")
-        .upsert(habitsToInsert, { onConflict: "user_id,name" });
+      const { error: habitsError } = await supabase.from("habits").upsert(habitsToInsert, { onConflict: "user_id,name" });
       if (habitsError) throw habitsError;
 
-      const { error: streakError } = await supabase
-        .from("streaks")
-        .upsert(
-          { user_id: user.id, current_streak: 0, longest_streak: 0, total_completions: 0 },
-          { onConflict: "user_id", ignoreDuplicates: true }
-        );
-      if (streakError) throw streakError;
+      await supabase.from("streaks").upsert(
+        { user_id: user.id, current_streak: 0, longest_streak: 0, total_completions: 0 },
+        { onConflict: "user_id", ignoreDuplicates: true }
+      );
 
       router.push("/dashboard");
     } catch (error) {
@@ -233,73 +230,58 @@ export default function OnboardingClient() {
     }
   };
 
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <main className="relative min-h-dvh flex flex-col overflow-hidden">
-      {/* Shake keyframe */}
+    <main style={{ minHeight: "100dvh", background: "var(--background)", position: "relative", overflowX: "hidden" }}>
       <style>{`
         @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          20% { transform: translateX(-6px); }
-          40% { transform: translateX(6px); }
-          60% { transform: translateX(-4px); }
-          80% { transform: translateX(4px); }
+          0%,100%{transform:translateX(0)}
+          20%{transform:translateX(-8px)}
+          40%{transform:translateX(8px)}
+          60%{transform:translateX(-5px)}
+          80%{transform:translateX(5px)}
         }
       `}</style>
+
+      {/* Progress bar */}
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 40, height: "3px", background: "var(--background-secondary)" }}>
+        <div style={{ height: "100%", width: `${(step / 4) * 100}%`, background: "var(--accent)", transition: "width 0.5s ease" }} />
+      </div>
 
       {/* Theme toggle */}
       <button
         onClick={toggleTheme}
-        className="fixed top-6 right-6 z-50 glass glass-hover p-3 cursor-pointer"
-        style={{ borderRadius: "var(--radius-full)" }}
         aria-label="Toggle theme"
+        style={{ position: "fixed", top: "20px", right: "20px", zIndex: 50, width: "40px", height: "40px", borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--surface-border)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}
       >
         {theme === "dark" ? "☀️" : "🌙"}
       </button>
 
-      {/* Progress bar */}
-      <div
-        className="fixed top-0 left-0 right-0 z-40 h-1"
-        style={{ background: "var(--background-secondary)" }}
-      >
-        <div
-          className="h-full transition-all duration-500 ease-out"
-          style={{
-            width: `${(step / totalSteps) * 100}%`,
-            background: "var(--accent)",
-          }}
-        />
-      </div>
+      {/* ── Page container ── */}
+      <div style={{ maxWidth: "680px", margin: "0 auto", padding: "72px 32px 80px", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
 
-      {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col max-w-lg mx-auto w-full px-6 pt-16 pb-8">
-        {/* Step dots */}
-        <div className="flex items-center gap-2 mb-8">
+        {/* Step dots — centered */}
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", marginBottom: "52px" }}>
           {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300"
-                style={{
-                  background: s <= step ? "var(--primary)" : "var(--surface)",
-                  color:
-                    s <= step ? "var(--primary-foreground)" : "var(--foreground-muted)",
-                  border: s <= step ? "none" : "1px solid var(--surface-border)",
-                }}
-              >
-                {s < step ? "✓" : s}
-              </div>
-              {s < 4 && (
-                <div
-                  className="w-8 h-0.5 transition-all duration-300"
-                  style={{
-                    background: s < step ? "var(--primary)" : "var(--surface-border)",
-                  }}
-                />
-              )}
+            <div
+              key={s}
+              style={{
+                width: "38px", height: "38px", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "14px", fontWeight: 700,
+                background: s < step ? "var(--accent)" : "transparent",
+                color: s < step ? "#fff" : s === step ? "var(--accent)" : "var(--foreground-muted)",
+                border: s < step ? "none" : s === step ? "2px solid var(--accent)" : "1.5px solid var(--surface-border)",
+                transition: "all 0.3s",
+                flexShrink: 0,
+              }}
+            >
+              {s < step ? "✓" : s}
             </div>
           ))}
         </div>
 
-        {/* ===== STEP 1: Profile ===== */}
+        {/* ══════════════ STEP 1: PROFILE ══════════════ */}
         {step === 1 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h2 className="text-2xl mb-2">Welcome to Legacy 🌙</h2>
@@ -307,75 +289,56 @@ export default function OnboardingClient() {
               Let&apos;s personalize your experience.
             </p>
 
-            <div className="space-y-6 mb-8">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  What should we call you?
-                </label>
-                <input
-                  type="text"
-                  value={preferredName}
-                  onChange={(e) => setPreferredName(e.target.value)}
-                  placeholder="e.g., Bilal or Sarah"
-                  className="w-full h-12 px-4 rounded-xl border-none text-base transition-shadow outline-none"
-                  style={{
-                    background: "var(--background-secondary)",
-                    color: "var(--foreground)",
-                    boxShadow: preferredName
-                      ? "0 0 0 2px var(--accent)"
-                      : "0 0 0 1px var(--surface-border)",
-                  }}
-                />
-              </div>
+            {/* Name */}
+            <div style={{ marginBottom: "44px" }}>
+              <label style={S.labelSmall}>What should we call you?</label>
+              <input
+                type="text"
+                value={preferredName}
+                onChange={(e) => setPreferredName(e.target.value)}
+                placeholder="e.g., Bilal or Sarah"
+                style={{ ...S.inputBase, border: preferredName ? "1.5px solid var(--accent)" : "1.5px solid var(--surface-border)" }}
+              />
+            </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Gender (for group matchmaking)
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(["Brother", "Sister"] as const).map((g) => (
-                    <button
-                      key={g}
-                      onClick={() => setGender(g)}
-                      className="h-12 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-                      style={{
-                        background:
-                          gender === g
-                            ? "var(--primary)"
-                            : "var(--background-secondary)",
-                        color:
-                          gender === g
-                            ? "var(--primary-foreground)"
-                            : "var(--foreground)",
-                        borderLeft:
-                          gender === g ? "4px solid var(--accent)" : "4px solid transparent",
-                      }}
-                    >
-                      {gender === g && <span className="text-sm">✓</span>}
-                      {g}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs mt-2" style={{ color: "var(--foreground-muted)" }}>
-                  Required for strictly gender-segregated accountability circles.
-                </p>
+            {/* Gender */}
+            <div style={{ marginBottom: "60px" }}>
+              <label style={S.labelSmall}>Gender (for group matchmaking)</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                {(["Brother", "Sister"] as const).map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setGender(g)}
+                    style={{
+                      height: "52px", fontWeight: 600, fontSize: "1rem",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                      cursor: "pointer", transition: "all 0.2s",
+                      background: gender === g ? "var(--foreground)" : "var(--background-secondary)",
+                      color: gender === g ? "var(--background)" : "var(--foreground)",
+                      border: gender === g ? "none" : "1.5px solid var(--surface-border)",
+                      borderRadius: "10px",
+                    }}
+                  >
+                    {gender === g && <span style={{ fontSize: "0.85rem" }}>✓</span>}
+                    {g}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="mt-auto flex justify-end">
+            <div style={{ marginTop: "auto", display: "flex", justifyContent: "flex-end" }}>
               <button
                 onClick={() => setStep(2)}
-                className="btn btn-primary"
                 disabled={!preferredName.trim() || !gender}
-                style={{ opacity: !preferredName.trim() || !gender ? 0.5 : 1 }}
+                style={{ ...S.btnAmber, opacity: !preferredName.trim() || !gender ? 0.45 : 1, cursor: !preferredName.trim() || !gender ? "not-allowed" : "pointer" }}
               >
-                Next →
+                Next Step
               </button>
             </div>
           </div>
         )}
 
-        {/* ===== STEP 2: Select Habits ===== */}
+        {/* ══════════════ STEP 2: SELECT HABITS ══════════════ */}
         {step === 2 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h2 className="text-2xl mb-2">Build your Core 3</h2>
@@ -383,39 +346,40 @@ export default function OnboardingClient() {
               Select up to 3 habits to focus on. Less is more.
             </p>
 
-            <div ref={gridRef} className="grid grid-cols-2 gap-3 mb-6">
+            {/* Habit grid */}
+            <div
+              ref={gridRef}
+              style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}
+            >
               {PRESET_HABITS.map((habit) => {
                 const isSelected = selectedHabits.some((h) => h.name === habit.name);
                 return (
                   <button
                     key={habit.name}
                     onClick={() => toggleHabit(habit)}
-                    className="glass glass-hover p-4 text-left cursor-pointer transition-all duration-200 relative"
                     style={{
-                      borderRadius: "var(--radius-md)",
-                      border: isSelected
-                        ? "2px solid var(--accent)"
-                        : "1px solid var(--surface-border)",
+                      position: "relative",
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      padding: "28px 16px",
+                      cursor: "pointer", transition: "all 0.18s",
                       background: isSelected
-                        ? theme === "dark"
-                          ? "rgba(217, 119, 6, 0.12)"
-                          : "rgba(217, 119, 6, 0.08)"
-                        : undefined,
+                        ? theme === "dark" ? "rgba(217,119,6,0.12)" : "rgba(253,230,138,0.22)"
+                        : "var(--surface)",
+                      border: isSelected ? "2px solid var(--accent)" : "1.5px solid rgba(0,0,0,0.12)",
+                      borderRadius: "12px",
                     }}
                   >
                     {isSelected && (
-                      <div
-                        className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-xs animate-bounce-in"
-                        style={{
-                          background: "var(--accent)",
-                          color: "white",
-                        }}
-                      >
-                        ✓
-                      </div>
+                      <div style={{
+                        position: "absolute", top: "10px", right: "10px",
+                        width: "20px", height: "20px", borderRadius: "50%",
+                        background: "var(--accent)", color: "#fff",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "11px", fontWeight: 700,
+                      }}>✓</div>
                     )}
-                    <span className="text-2xl block mb-1">{habit.icon}</span>
-                    <span className="text-sm font-medium block leading-tight">
+                    <span style={{ fontSize: "1.8rem", marginBottom: "10px", lineHeight: 1 }}>{habit.icon}</span>
+                    <span style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--foreground-muted)", textAlign: "center", lineHeight: 1.3 }}>
                       {habit.name}
                     </span>
                   </button>
@@ -424,80 +388,38 @@ export default function OnboardingClient() {
             </div>
 
             {/* Custom habit */}
-            <div className="glass p-4 mb-6" style={{ borderRadius: "var(--radius-md)" }}>
-              <p
-                className="text-sm font-medium mb-3"
-                style={{ color: "var(--foreground-muted)" }}
+            <div style={{ display: "flex", gap: "10px", marginBottom: "40px" }}>
+              <input
+                type="text"
+                value={customHabitName}
+                onChange={(e) => setCustomHabitName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addCustomHabit()}
+                placeholder="✦  Add custom habit..."
+                style={{ ...S.inputBase, flex: 1, height: "48px", border: "1.5px solid var(--surface-border)" }}
+              />
+              <button
+                onClick={addCustomHabit}
+                disabled={!customHabitName.trim()}
+                style={{ ...S.btnAmber, borderRadius: "10px", padding: "0 20px", height: "48px", fontSize: "0.72rem", opacity: !customHabitName.trim() ? 0.45 : 1, cursor: !customHabitName.trim() ? "not-allowed" : "pointer" }}
               >
-                + Add a custom habit
-              </p>
-              <div className="flex gap-2">
-                <select
-                  value={customHabitIcon}
-                  onChange={(e) => setCustomHabitIcon(e.target.value)}
-                  className="w-12 h-10 text-center rounded-lg border-none cursor-pointer text-lg"
-                  style={{
-                    background: "var(--background-secondary)",
-                    color: "var(--foreground)",
-                  }}
-                >
-                  {["✨", "📚", "🤲", "💪", "🧘", "📝", "🎯", "❤️"].map((emoji) => (
-                    <option key={emoji} value={emoji}>
-                      {emoji}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={customHabitName}
-                  onChange={(e) => setCustomHabitName(e.target.value)}
-                  placeholder="e.g., Reading Islamic books"
-                  className="flex-1 h-10 px-3 rounded-lg border-none text-sm outline-none"
-                  style={{
-                    background: "var(--background-secondary)",
-                    color: "var(--foreground)",
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && addCustomHabit()}
-                />
-                <button
-                  onClick={addCustomHabit}
-                  className="btn btn-primary h-10 px-4 text-sm"
-                  disabled={!customHabitName.trim()}
-                >
-                  Add
-                </button>
-              </div>
+                ADD
+              </button>
             </div>
 
-            <div className="mt-auto flex items-center justify-between">
-              <button onClick={() => setStep(1)} className="btn btn-secondary w-20">
-                ← Back
-              </button>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3].map((n) => (
-                  <div
-                    key={n}
-                    className="w-2 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      background:
-                        n <= selectedHabits.length ? "var(--accent)" : "var(--surface-border)",
-                    }}
-                  />
-                ))}
-              </div>
+            <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <button onClick={() => setStep(1)} style={S.btnBack}>BACK</button>
               <button
                 onClick={() => setStep(3)}
-                className="btn btn-primary w-20"
                 disabled={selectedHabits.length === 0}
-                style={{ opacity: selectedHabits.length === 0 ? 0.5 : 1 }}
+                style={{ ...S.btnAmber, opacity: selectedHabits.length === 0 ? 0.45 : 1, cursor: selectedHabits.length === 0 ? "not-allowed" : "pointer" }}
               >
-                Next →
+                Next Step
               </button>
             </div>
           </div>
         )}
 
-        {/* ===== STEP 3: AI Suggestions ===== */}
+        {/* ══════════════ STEP 3: AI MASTERPLAN ══════════════ */}
         {step === 3 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h2 className="text-2xl mb-2">Your graceful step-down plan</h2>
@@ -505,162 +427,99 @@ export default function OnboardingClient() {
               AI-powered suggestions to make your habits sustainable.
             </p>
 
-            <div
-              className="flex-1 overflow-y-auto space-y-4 mb-6 pr-1"
-              style={{ maxHeight: "calc(100dvh - 320px)" }}
-            >
+            {/* Title */}
+            <div style={{ marginBottom: "32px" }}>
+              <h2 style={{ fontFamily: "var(--font-serif)", fontWeight: 300, fontSize: "clamp(2.2rem, 5vw, 3rem)", lineHeight: 1.1, color: "var(--foreground)", marginBottom: 0 }}>
+                Your graceful<br />
+                <em>step-down.</em>
+              </h2>
+              <div style={{ height: "2px", background: "var(--accent)", width: "240px", marginTop: "20px" }} />
+            </div>
+
+            {/* Habit cards */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", flex: 1, overflowY: "auto", marginBottom: "24px" }}>
               {selectedHabits.map((habit, index) => (
                 <div
                   key={habit.name}
-                  className="glass p-5 animate-slide-up"
-                  style={{
-                    borderRadius: "var(--radius-lg)",
-                    animationDelay: `${index * 100}ms`,
-                    animationFillMode: "both",
-                  }}
+                  style={{ background: "var(--surface)", border: "1px solid var(--surface-border)", borderRadius: "12px", padding: "24px" }}
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">{habit.icon}</span>
-                    <div>
-                      <h3 className="font-semibold">{habit.name}</h3>
-                      <p className="text-xs" style={{ color: "var(--foreground-muted)" }}>
-                        Ramadan: {habit.ramadanAmount || "Not specified"}
-                      </p>
-                    </div>
+                  {/* Habit header */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
+                    <span style={{ fontSize: "1.25rem", color: "var(--accent)" }}>{habit.icon}</span>
+                    <span style={{ fontWeight: 700, fontSize: "1rem", color: "var(--foreground)" }}>{habit.name}</span>
                   </div>
 
-                  <div className="mb-3">
-                    <label
-                      className="text-xs font-medium block mb-1"
-                      style={{ color: "var(--foreground-muted)" }}
-                    >
-                      How much did you do in Ramadan?
-                    </label>
+                  {/* Ramadan volume */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <label style={S.labelSmall}>Ramadan Volume</label>
                     <input
                       type="text"
                       value={habit.ramadanAmount}
                       onChange={(e) => updateRamadanAmount(index, e.target.value)}
-                      placeholder="e.g., 1 Juz per day"
-                      className="w-full h-9 px-3 rounded-lg border-none text-sm outline-none"
+                      placeholder="e.g. 1 Juz / day"
                       style={{
-                        background: "var(--background-secondary)",
-                        color: "var(--foreground)",
+                        width: "100%", background: "transparent", color: "var(--foreground)",
+                        border: "none", borderBottom: "1px solid var(--surface-border)",
+                        padding: "8px 0", fontSize: "0.95rem", outline: "none", borderRadius: 0,
                       }}
                     />
                   </div>
 
-                  {habit.isLoadingSuggestion ? (
-                    <div
-                      className="p-3 rounded-lg"
-                      style={{ background: "var(--background-secondary)" }}
-                    >
-                      {/* Shimmer skeleton */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <div
-                          className="w-4 h-4 rounded-full animate-pulse-soft"
-                          style={{ background: "var(--surface-border)" }}
-                        />
-                        <div
-                          className="h-3 rounded flex-1 animate-pulse-soft"
-                          style={{ background: "var(--surface-border)" }}
-                        />
-                      </div>
-                      <div
-                        className="h-3 rounded w-3/4 animate-pulse-soft"
-                        style={{ background: "var(--surface-border)" }}
-                      />
+                  {/* AI suggestion */}
+                  {habit.isLoadingSuggestion && (
+                    <div style={{ borderLeft: "3px solid var(--accent)", paddingLeft: "14px", marginBottom: "20px" }}>
+                      <div style={{ height: "10px", background: "var(--surface-border)", borderRadius: "4px", width: "60%", marginBottom: "8px", opacity: 0.6 }} />
+                      <div style={{ height: "10px", background: "var(--surface-border)", borderRadius: "4px", width: "80%", opacity: 0.4 }} />
                     </div>
-                  ) : habit.suggestedAmount ? (
-                    <div
-                      className="p-3 rounded-lg"
-                      style={{
-                        background:
-                          theme === "dark"
-                            ? "rgba(217, 119, 6, 0.10)"
-                            : "rgba(217, 119, 6, 0.06)",
-                        border: "1px solid rgba(217, 119, 6, 0.2)",
-                      }}
-                    >
-                      <div className="flex items-start gap-2 mb-2">
-                        <span className="text-sm">✨</span>
-                        <div>
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: "var(--accent)" }}
-                          >
-                            Suggested: {habit.suggestedAmount}
-                          </p>
-                          {habit.motivation && (
-                            <p
-                              className="text-xs mt-1 italic"
-                              style={{ color: "var(--foreground-muted)" }}
-                            >
-                              {habit.motivation}
-                            </p>
-                          )}
-                          {habit.tip && (
-                            <p
-                              className="text-xs mt-1"
-                              style={{ color: "var(--foreground-muted)" }}
-                            >
-                              💪 {habit.tip}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <label
-                          className="text-xs font-medium block mb-1"
-                          style={{ color: "var(--foreground-muted)" }}
-                        >
-                          Your commitment:
-                        </label>
-                        <input
-                          type="text"
-                          value={habit.acceptedAmount || ""}
-                          onChange={(e) => {
-                            setSelectedHabits((prev) => {
-                              const updated = [...prev];
-                              updated[index] = {
-                                ...updated[index],
-                                acceptedAmount: e.target.value,
-                              };
-                              return updated;
-                            });
-                          }}
-                          className="w-full h-9 px-3 rounded-lg border-none text-sm outline-none"
-                          style={{
-                            background: "var(--background)",
-                            color: "var(--foreground)",
-                          }}
-                        />
-                      </div>
+                  )}
+
+                  {!habit.isLoadingSuggestion && habit.suggestedAmount && (
+                    <div style={{ borderLeft: "3px solid var(--accent)", paddingLeft: "14px", marginBottom: "20px" }}>
+                      <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "8px" }}>
+                        ⚡ Suggested: {habit.suggestedAmount}
+                      </p>
+                      {habit.motivation && (
+                        <p style={{ fontSize: "0.9rem", fontStyle: "italic", color: "var(--foreground-muted)", lineHeight: 1.55 }}>
+                          &ldquo;{habit.motivation}&rdquo;
+                        </p>
+                      )}
                     </div>
-                  ) : (
+                  )}
+
+                  {!habit.isLoadingSuggestion && !habit.suggestedAmount && (
                     <button
                       onClick={() => fetchSuggestion(index)}
-                      className="btn btn-secondary text-sm w-full"
                       disabled={!habit.ramadanAmount}
+                      style={{ background: "none", border: "none", cursor: !habit.ramadanAmount ? "not-allowed" : "pointer", fontSize: "0.85rem", color: "var(--accent)", padding: "4px 0", marginBottom: "20px", opacity: !habit.ramadanAmount ? 0.45 : 1 }}
                     >
                       ✨ Get AI suggestion
                     </button>
+                  )}
+
+                  {/* Commitment */}
+                  {habit.suggestedAmount && (
+                    <div>
+                      <label style={S.labelSmall}>Your Commitment</label>
+                      <input
+                        type="text"
+                        value={habit.acceptedAmount || ""}
+                        onChange={(e) => setSelectedHabits((prev) => { const u = [...prev]; u[index] = { ...u[index], acceptedAmount: e.target.value }; return u; })}
+                        style={{ ...S.inputBase, height: "46px", border: "1.5px solid var(--surface-border)" }}
+                      />
+                    </div>
                   )}
                 </div>
               ))}
             </div>
 
-            <div className="mt-auto flex items-center justify-between">
-              <button onClick={() => setStep(2)} className="btn btn-secondary">
-                ← Back
-              </button>
-              <button onClick={() => setStep(4)} className="btn btn-primary">
-                Next →
-              </button>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px" }}>
+              <button onClick={() => setStep(2)} style={S.btnBack}>BACK</button>
+              <button onClick={() => setStep(4)} style={S.btnAmber}>Set Plan</button>
             </div>
           </div>
         )}
 
-        {/* ===== STEP 4: Review & Confirm ===== */}
+        {/* ══════════════ STEP 4: REVIEW ══════════════ */}
         {step === 4 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h2 className="text-2xl mb-2">Your Post-Ramadan Plan</h2>
@@ -668,102 +527,63 @@ export default function OnboardingClient() {
               Review your habits and launch your journey.
             </p>
 
-            {/* Shawwal opt-in */}
+            {/* Shawwal */}
             <button
               onClick={() => setIncludeShawwal(!includeShawwal)}
-              className="glass glass-hover p-4 mb-6 w-full text-left cursor-pointer flex items-center gap-4"
               style={{
-                borderRadius: "var(--radius-lg)",
-                border: includeShawwal
-                  ? "2px solid rgba(217, 119, 6, 0.5)"
-                  : "1px solid var(--surface-border)",
-                background: includeShawwal
-                  ? theme === "dark"
-                    ? "rgba(217, 119, 6, 0.08)"
-                    : "rgba(217, 119, 6, 0.05)"
-                  : undefined,
+                width: "100%", display: "flex", alignItems: "center", gap: "16px",
+                padding: "18px 20px", cursor: "pointer", textAlign: "left", marginBottom: "24px",
+                background: includeShawwal ? (theme === "dark" ? "rgba(217,119,6,0.08)" : "rgba(253,230,138,0.18)") : "var(--surface)",
+                border: includeShawwal ? "2px solid rgba(217,119,6,0.45)" : "1.5px solid var(--surface-border)",
+                borderRadius: "12px", transition: "all 0.2s",
               }}
             >
-              <span className="text-3xl">🌙</span>
-              <div className="flex-1">
-                <h3 className="font-semibold">Shawwal 6-Day Fast Challenge</h3>
-                <p className="text-xs" style={{ color: "var(--foreground-muted)" }}>
-                  Fast 6 days in Shawwal — it&apos;s like fasting the entire year!
-                </p>
+              <span style={{ fontSize: "1.75rem" }}>🌙</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: "4px" }}>Shawwal 6-Day Fast Challenge</p>
+                <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)" }}>Fast 6 days in Shawwal — it&apos;s like fasting the entire year!</p>
               </div>
-              <div
-                className="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
-                style={{
-                  borderColor: includeShawwal ? "var(--accent)" : "var(--foreground-muted)",
-                  background: includeShawwal ? "var(--accent)" : "transparent",
-                }}
-              >
-                {includeShawwal && <span className="text-white text-xs">✓</span>}
+              <div style={{ width: "22px", height: "22px", borderRadius: "50%", border: `2px solid ${includeShawwal ? "var(--accent)" : "var(--foreground-muted)"}`, background: includeShawwal ? "var(--accent)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
+                {includeShawwal && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 700 }}>✓</span>}
               </div>
             </button>
 
             {/* Habits summary */}
-            <div
-              className="flex-1 overflow-y-auto space-y-3 mb-6"
-              style={{ maxHeight: "calc(100dvh - 400px)" }}
-            >
-              {selectedHabits.map((habit, index) => (
-                <div
-                  key={habit.name}
-                  className="glass p-4 flex items-center gap-3 animate-slide-up"
-                  style={{
-                    borderRadius: "var(--radius-md)",
-                    animationDelay: `${index * 80}ms`,
-                    animationFillMode: "both",
-                  }}
-                >
-                  <span className="text-xl">{habit.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm truncate">{habit.name}</h4>
-                    <p className="text-xs truncate" style={{ color: "var(--accent)" }}>
-                      Goal: {habit.acceptedAmount || habit.suggestedAmount || "To be set"}
-                    </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "28px" }}>
+              {selectedHabits.map((habit, i) => (
+                <div key={habit.name} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 18px", background: "var(--surface)", border: "1.5px solid var(--surface-border)", borderRadius: "10px" }}>
+                  <span style={{ fontSize: "1.25rem" }}>{habit.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "2px" }}>{habit.name}</p>
+                    <p style={{ fontSize: "0.78rem", color: "var(--accent)" }}>Goal: {habit.acceptedAmount || habit.suggestedAmount || "To be set"}</p>
                   </div>
-                  <span className="text-xs" style={{ color: "var(--foreground-muted)" }}>
-                    was: {habit.ramadanAmount}
-                  </span>
+                  <span style={{ fontSize: "0.72rem", color: "var(--foreground-muted)", whiteSpace: "nowrap" }}>was: {habit.ramadanAmount || "—"}</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--accent)", marginLeft: "4px" }}>{i + 1}</span>
                 </div>
               ))}
             </div>
 
-            {/* Motivational quote */}
-            <div
-              className="glass p-4 mb-6 text-center text-sm italic"
-              style={{
-                borderRadius: "var(--radius-md)",
-                color: "var(--foreground-muted)",
-              }}
-            >
-              &ldquo;Take up good deeds only as much as you are able, for the best deeds
-              are those done regularly even if they are few.&rdquo;
-              <span
-                className="block mt-1 text-xs not-italic font-medium"
-                style={{ color: "var(--accent)" }}
-              >
-                — Sunan Ibn Majah
-              </span>
+            {/* Quote */}
+            <div style={{ padding: "20px 24px", background: "var(--background-secondary)", borderRadius: "10px", marginBottom: "32px", textAlign: "center" }}>
+              <p style={{ fontSize: "0.9rem", fontStyle: "italic", color: "var(--foreground-muted)", lineHeight: 1.6 }}>
+                &ldquo;Take up good deeds only as much as you are able, for the best deeds are those done regularly even if they are few.&rdquo;
+              </p>
+              <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--accent)", marginTop: "10px" }}>— Sunan Ibn Majah</p>
             </div>
 
-            <div className="mt-auto flex items-center justify-between pt-4">
-              <button onClick={() => setStep(3)} className="btn btn-secondary">
-                ← Back
-              </button>
+            <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <button onClick={() => setStep(3)} style={S.btnBack}>BACK</button>
               <button
                 onClick={saveHabits}
-                className="btn btn-accent text-base px-8 shadow-lg"
                 disabled={isSaving}
-                style={{ opacity: isSaving ? 0.7 : 1 }}
+                style={{ ...S.btnAmber, opacity: isSaving ? 0.7 : 1, cursor: isSaving ? "not-allowed" : "pointer", padding: "14px 36px", fontSize: "0.9rem" }}
               >
-                {isSaving ? "Saving..." : "Start My Legacy 🚀"}
+                {isSaving ? "Saving..." : "Start My Legacy"}
               </button>
             </div>
           </div>
         )}
+
       </div>
     </main>
   );

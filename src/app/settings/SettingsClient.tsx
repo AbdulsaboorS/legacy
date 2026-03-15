@@ -87,6 +87,20 @@ export default function SettingsClient() {
     router.push("/");
   };
 
+  const handleResetAccount = async () => {
+    if (!confirm("Reset your account? This deletes all habits, logs, and streaks. You'll go through onboarding again.")) return;
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase.from("habit_logs").delete().eq("user_id", user.id);
+    await supabase.from("shawwal_fasts").delete().eq("user_id", user.id);
+    await supabase.from("streaks").delete().eq("user_id", user.id);
+    await supabase.from("habits").delete().eq("user_id", user.id);
+
+    router.push("/onboarding");
+  };
+
   if (loading) {
     return (
       <main
@@ -323,6 +337,33 @@ export default function SettingsClient() {
               ⚠️
             </span>
             <span className="font-medium">Reset Account (Dev Mode)</span>
+          </button>
+        </section>
+
+        {/* Dev Tools */}
+        <section className="mb-10">
+          <h2
+            className="text-xs font-semibold uppercase tracking-widest mb-3"
+            style={{ color: "var(--foreground-muted)" }}
+          >
+            Dev Tools
+          </h2>
+          <button
+            onClick={handleResetAccount}
+            className="glass glass-hover w-full p-4 flex items-center gap-3 cursor-pointer transition-all"
+            style={{
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid rgba(239, 68, 68, 0.2)",
+              color: "#EF4444",
+            }}
+          >
+            <span
+              className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
+              style={{ background: "rgba(239, 68, 68, 0.1)" }}
+            >
+              🔄
+            </span>
+            <span className="font-medium">Reset Account</span>
           </button>
         </section>
 

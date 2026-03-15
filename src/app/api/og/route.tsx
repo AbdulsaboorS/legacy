@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            background: "linear-gradient(180deg, #141210 0%, #1A2820 50%, #1E1A10 100%)",
+            background: "linear-gradient(180deg, #0F0F0F 0%, #1A1A1A 100%)",
             fontFamily: "sans-serif",
             padding: "40px",
           }}
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
               width: "600px",
               height: "600px",
               background:
-                "radial-gradient(circle, rgba(76, 175, 130, 0.15) 0%, transparent 70%)",
+                "radial-gradient(circle, rgba(217, 119, 6, 0.10) 0%, transparent 70%)",
               borderRadius: "50%",
             }}
           />
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
               width: "600px",
               height: "600px",
               background:
-                "radial-gradient(circle, rgba(201, 150, 58, 0.15) 0%, transparent 70%)",
+                "radial-gradient(circle, rgba(217, 119, 6, 0.15) 0%, transparent 70%)",
               borderRadius: "50%",
             }}
           />
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
               alignItems: "center",
               justifyContent: "center",
               background: "rgba(20, 18, 16, 0.6)",
-              border: "1px solid rgba(76, 175, 130, 0.25)",
+              border: "1px solid rgba(217, 119, 6, 0.25)",
               borderRadius: "32px",
               padding: "60px",
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.6)",
@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
                 style={{
                   fontSize: 120,
                   fontWeight: 900,
-                  color: "#C9963A",
+                  color: "#D97706",
                   lineHeight: 1,
                   marginRight: "20px",
                 }}
@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
               style={{
                 width: "120px",
                 height: "3px",
-                background: "linear-gradient(135deg, #C9963A, #E8B85A)",
+                background: "linear-gradient(135deg, #D97706, #F59E0B)",
                 borderRadius: "9999px",
                 marginTop: "30px",
               }}

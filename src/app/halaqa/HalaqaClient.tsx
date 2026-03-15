@@ -336,7 +336,7 @@ export default function HalaqaClient() {
               className="w-full glass glass-hover p-5 mb-6 text-center cursor-pointer"
               style={{
                 borderRadius: "var(--radius-lg)",
-                border: "2px dashed rgba(201, 150, 58, 0.5)",
+                border: "2px dashed rgba(217, 119, 6, 0.5)",
               }}
             >
               <span className="text-2xl mb-2 block">🤝</span>
@@ -506,8 +506,8 @@ export default function HalaqaClient() {
                     onClick={() => activeHalaqaId && copyInviteLink(activeHalaqaId)}
                     className="text-xs px-3 py-1.5 rounded-full transition-all"
                     style={{
-                      background: "rgba(201, 150, 58, 0.12)",
-                      border: "1px solid rgba(201, 150, 58, 0.3)",
+                      background: "rgba(217, 119, 6, 0.12)",
+                      border: "1px solid rgba(217, 119, 6, 0.3)",
                       color: "var(--accent)",
                     }}
                   >
