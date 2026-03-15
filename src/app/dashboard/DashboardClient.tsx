@@ -111,7 +111,16 @@ export default function DashboardClient() {
       });
     }
 
-    await updateStreak(user.id);
+    // Authoritative streak recalc via Postgres RPC (handles per-habit grace)
+    await supabase.rpc("recalculate_streak", { p_user_id: user.id });
+
+    // Refresh streak + habits to sync grace indicators in UI
+    const [{ data: freshStreak }, { data: freshHabits }] = await Promise.all([
+      supabase.from("streaks").select("*").eq("user_id", user.id).single(),
+      supabase.from("habits").select("*").eq("user_id", user.id).eq("is_active", true).order("created_at", { ascending: true }),
+    ]);
+    if (freshStreak) setStreak(freshStreak);
+    if (freshHabits) setHabits(freshHabits);
   };
 
   const toggleShawwalFast = async () => {
@@ -136,91 +145,6 @@ export default function DashboardClient() {
         completed: true,
       });
       setShawwalDaysCompleted((prev) => prev + 1);
-    }
-  };
-
-  const updateStreak = async (userId: string) => {
-    const supabase = createClient();
-    const { data: allHabits } = await supabase
-      .from("habits")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("is_active", true);
-
-    const { data: todayCompletedLogs } = await supabase
-      .from("habit_logs")
-      .select("habit_id")
-      .eq("user_id", userId)
-      .eq("date", today)
-      .eq("completed", true);
-
-    const allCompleted =
-      allHabits &&
-      todayCompletedLogs &&
-      allHabits.length > 0 &&
-      todayCompletedLogs.length >= allHabits.length;
-
-    if (allCompleted && streak) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-      const twoDaysAgo = new Date();
-      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-      const twoDaysAgoStr = twoDaysAgo.toISOString().split("T")[0];
-
-      let newStreak = 1;
-      let newGraceDate = streak.last_grace_date;
-
-      if (streak.last_completed_date === today) {
-        newStreak = streak.current_streak;
-      } else if (streak.last_completed_date === yesterdayStr) {
-        newStreak = streak.current_streak + 1;
-      } else if (streak.last_completed_date === twoDaysAgoStr) {
-        let canUseGrace = true;
-        if (streak.last_grace_date) {
-          const diffDays = Math.floor(
-            (new Date().getTime() - new Date(streak.last_grace_date).getTime()) /
-              (1000 * 3600 * 24)
-          );
-          if (diffDays <= 7) canUseGrace = false;
-        }
-        if (canUseGrace) {
-          newStreak = streak.current_streak + 1;
-          newGraceDate = yesterdayStr;
-        } else {
-          newStreak = 1;
-        }
-      } else {
-        newStreak = 1;
-      }
-
-      const newLongest = Math.max(streak.longest_streak, newStreak);
-
-      await supabase
-        .from("streaks")
-        .update({
-          current_streak: newStreak,
-          longest_streak: newLongest,
-          last_completed_date: today,
-          last_grace_date: newGraceDate,
-          total_completions: streak.total_completions + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId);
-
-      setStreak((prev) =>
-        prev
-          ? {
-              ...prev,
-              current_streak: newStreak,
-              longest_streak: newLongest,
-              last_completed_date: today,
-              last_grace_date: newGraceDate,
-              total_completions: prev.total_completions + 1,
-            }
-          : prev
-      );
     }
   };
 
@@ -283,14 +207,15 @@ export default function DashboardClient() {
     return milestones;
   };
 
-  const isGraceActive = (() => {
-    if (!streak?.last_grace_date) return false;
+  // Grace is active if any individual habit used its grace slot in the last 7 days
+  const isGraceActive = habits.some((habit) => {
+    if (!habit.last_grace_date) return false;
     const diffDays = Math.floor(
-      (new Date().getTime() - new Date(streak.last_grace_date).getTime()) /
+      (new Date().getTime() - new Date(habit.last_grace_date).getTime()) /
         (1000 * 3600 * 24)
     );
     return diffDays <= 7;
-  })();
+  });
 
   if (loading) {
     return (
@@ -359,7 +284,7 @@ export default function DashboardClient() {
                 style={{
                   border: "1px solid var(--accent)",
                   color: "var(--accent)",
-                  background: "rgba(201, 150, 58, 0.1)",
+                  background: "rgba(217, 119, 6, 0.1)",
                 }}
                 title="Grace day used this week — streak protected!"
               >
@@ -397,9 +322,9 @@ export default function DashboardClient() {
                 onClick={shareMilestone}
                 className="mt-3 text-xs px-3 py-1.5 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto"
                 style={{
-                  background: "rgba(201, 150, 58, 0.15)",
+                  background: "rgba(217, 119, 6, 0.15)",
                   color: "var(--accent)",
-                  border: "1px solid rgba(201, 150, 58, 0.3)",
+                  border: "1px solid rgba(217, 119, 6, 0.3)",
                 }}
               >
                 <span>📤</span> Share
@@ -587,9 +512,9 @@ export default function DashboardClient() {
                       className="w-full flex items-center justify-between px-5 py-2 text-xs transition-all"
                       style={{
                         background: theme === "dark"
-                          ? "rgba(201, 150, 58, 0.07)"
-                          : "rgba(201, 150, 58, 0.05)",
-                        border: "1px solid rgba(201, 150, 58, 0.2)",
+                          ? "rgba(217, 119, 6, 0.07)"
+                          : "rgba(217, 119, 6, 0.05)",
+                        border: "1px solid rgba(217, 119, 6, 0.2)",
                         borderTop: "none",
                         borderRadius: isMasterplanOpen
                           ? "0"
@@ -611,7 +536,7 @@ export default function DashboardClient() {
                         className="glass p-5 space-y-4 animate-fade-in"
                         style={{
                           borderRadius: "0 0 var(--radius-lg) var(--radius-lg)",
-                          border: "1px solid rgba(201, 150, 58, 0.15)",
+                          border: "1px solid rgba(217, 119, 6, 0.15)",
                           borderTop: "none",
                         }}
                       >

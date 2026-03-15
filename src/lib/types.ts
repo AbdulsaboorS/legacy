@@ -30,6 +30,7 @@ export interface Habit {
   core_philosophy?: string | null;
   actionable_steps?: ActionableStep[] | null;
   weekly_roadmap?: WeekEntry[] | null;
+  last_grace_date?: string | null;
 }
 
 export interface HabitLog {
