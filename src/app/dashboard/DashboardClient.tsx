@@ -17,26 +17,31 @@ export default function DashboardClient() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [shawwalDaysCompleted, setShawwalDaysCompleted] = useState(0);
 
-  // Get daily quote based on date
   const todayQuote = PROPHETIC_QUOTES[new Date().getDate() % PROPHETIC_QUOTES.length];
-
-  // Get today's date in YYYY-MM-DD
   const today = new Date().toISOString().split("T")[0];
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       router.push("/");
       return;
     }
 
-    setUserName(user.user_metadata?.full_name?.split(" ")[0] || "");
+    // Pull preferred_name from profiles table
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("preferred_name")
+      .eq("id", user.id)
+      .single();
 
-    // Load habits
+    setUserName(
+      profile?.preferred_name ||
+      user.user_metadata?.full_name?.split(" ")[0] ||
+      ""
+    );
+
     const { data: habitsData } = await supabase
       .from("habits")
       .select("*")
@@ -46,7 +51,6 @@ export default function DashboardClient() {
 
     if (habitsData) setHabits(habitsData);
 
-    // Load today's logs
     const { data: logsData } = await supabase
       .from("habit_logs")
       .select("*")
@@ -61,7 +65,6 @@ export default function DashboardClient() {
       setTodayLogs(logMap);
     }
 
-    // Load streak
     const { data: streakData } = await supabase
       .from("streaks")
       .select("*")
@@ -70,7 +73,6 @@ export default function DashboardClient() {
 
     if (streakData) setStreak(streakData);
 
-    // Load Shawwal fasts count
     const { count } = await supabase
       .from("shawwal_fasts")
       .select("*", { count: "exact", head: true })
@@ -85,29 +87,21 @@ export default function DashboardClient() {
     loadData();
   }, [loadData]);
 
-  // Toggle habit completion
   const toggleHabit = async (habitId: string) => {
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     const isCompleted = todayLogs[habitId];
-
-    // Optimistic update
     setTodayLogs((prev) => ({ ...prev, [habitId]: !isCompleted }));
 
     if (isCompleted) {
-      // Uncomplete
       await supabase
         .from("habit_logs")
         .delete()
         .eq("habit_id", habitId)
         .eq("date", today);
     } else {
-      // Complete
       await supabase.from("habit_logs").upsert({
         habit_id: habitId,
         user_id: user.id,
@@ -116,17 +110,12 @@ export default function DashboardClient() {
       });
     }
 
-    // Update streak after toggling
     await updateStreak(user.id);
   };
 
-  // Toggle Shawwal fast
   const toggleShawwalFast = async () => {
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     const { data: existing } = await supabase
@@ -137,10 +126,7 @@ export default function DashboardClient() {
       .single();
 
     if (existing) {
-      await supabase
-        .from("shawwal_fasts")
-        .delete()
-        .eq("id", existing.id);
+      await supabase.from("shawwal_fasts").delete().eq("id", existing.id);
       setShawwalDaysCompleted((prev) => Math.max(0, prev - 1));
     } else {
       await supabase.from("shawwal_fasts").insert({
@@ -152,11 +138,8 @@ export default function DashboardClient() {
     }
   };
 
-  // Update streak
   const updateStreak = async (userId: string) => {
     const supabase = createClient();
-
-    // Check if all habits are completed today
     const { data: allHabits } = await supabase
       .from("habits")
       .select("id")
@@ -189,32 +172,25 @@ export default function DashboardClient() {
       let newGraceDate = streak.last_grace_date;
 
       if (streak.last_completed_date === today) {
-        // Already completed today
         newStreak = streak.current_streak;
       } else if (streak.last_completed_date === yesterdayStr) {
-        // Perfect streak
         newStreak = streak.current_streak + 1;
       } else if (streak.last_completed_date === twoDaysAgoStr) {
-        // Missed exactly yesterday. Can we use a grace day?
         let canUseGrace = true;
         if (streak.last_grace_date) {
-          const graceDate = new Date(streak.last_grace_date);
-          const diffDays = Math.floor((new Date().getTime() - graceDate.getTime()) / (1000 * 3600 * 24));
-          if (diffDays <= 7) {
-            canUseGrace = false;
-          }
+          const diffDays = Math.floor(
+            (new Date().getTime() - new Date(streak.last_grace_date).getTime()) /
+              (1000 * 3600 * 24)
+          );
+          if (diffDays <= 7) canUseGrace = false;
         }
-
         if (canUseGrace) {
-          // Grace day used! Streak survives.
-          newStreak = streak.current_streak + 1; // Or +2 if we want to count the forgiven day, let's just +1
-          newGraceDate = yesterdayStr; // Mark yesterday as the grace day
+          newStreak = streak.current_streak + 1;
+          newGraceDate = yesterdayStr;
         } else {
-          // Missed yesterday and grace not available. Streak breaks.
           newStreak = 1;
         }
       } else {
-        // Missed more than 1 day. Streak breaks.
         newStreak = 1;
       }
 
@@ -247,13 +223,9 @@ export default function DashboardClient() {
     }
   };
 
-  // Reset streak (Taubah)
   const resetStreak = async () => {
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     await supabase
@@ -267,27 +239,39 @@ export default function DashboardClient() {
       .eq("user_id", user.id);
 
     setStreak((prev) =>
-      prev ? { ...prev, current_streak: 0, last_completed_date: null, last_grace_date: null } : prev
+      prev
+        ? { ...prev, current_streak: 0, last_completed_date: null, last_grace_date: null }
+        : prev
     );
     setShowResetModal(false);
   };
 
-  // Sign out
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
+  const shareMilestone = async () => {
+    if (!streak) return;
+    const url = `${window.location.origin}/api/og?name=${encodeURIComponent(userName || "Friend")}&streak=${streak.current_streak}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "My Post-Ramadan Legacy",
+          text: `I've built a ${streak.current_streak}-day streak of my core habits post-Ramadan! Join me on Legacy.`,
+          url,
+        });
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      window.open(url, "_blank");
+    }
   };
 
   const completedCount = Object.values(todayLogs).filter(Boolean).length;
-  const completionPercentage = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
+  const completionPercentage =
+    habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
 
-  // Determine greeting
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 
-  // Milestone badges
   const getMilestones = (streakCount: number) => {
     const milestones = [];
     if (streakCount >= 3) milestones.push({ label: "3 Days", emoji: "⭐" });
@@ -298,33 +282,20 @@ export default function DashboardClient() {
     return milestones;
   };
 
-  const shareMilestone = async () => {
-    if (!streak) return;
-    const url = `${window.location.origin}/api/og?name=${encodeURIComponent(userName || "Friend")}&streak=${streak.current_streak}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'My Post-Ramadan Legacy',
-          text: `I've built a ${streak.current_streak}-day streak of my core habits post-Ramadan! Join me on Legacy.`,
-          url: url,
-        });
-      } catch (err) {
-        console.error("Error sharing:", err);
-      }
-    } else {
-      window.open(url, "_blank");
-    }
-  };
+  const isGraceActive = (() => {
+    if (!streak?.last_grace_date) return false;
+    const diffDays = Math.floor(
+      (new Date().getTime() - new Date(streak.last_grace_date).getTime()) /
+        (1000 * 3600 * 24)
+    );
+    return diffDays <= 7;
+  })();
 
   if (loading) {
     return (
-      <main
-        className="min-h-dvh flex items-center justify-center"
-        style={{ background: "var(--background)" }}
-      >
+      <main className="min-h-dvh flex items-center justify-center" style={{ background: "var(--background)" }}>
         <div className="text-center animate-pulse-soft">
-          <div className="text-4xl mb-4">🌙</div>
+          <div className="text-4xl mb-4 animate-float">🌙</div>
           <p style={{ color: "var(--foreground-muted)" }}>Loading your habits...</p>
         </div>
       </main>
@@ -339,16 +310,18 @@ export default function DashboardClient() {
         style={{
           background:
             theme === "dark"
-              ? "radial-gradient(ellipse at 20% 0%, rgba(13, 148, 136, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(217, 119, 6, 0.06) 0%, transparent 50%)"
-              : "radial-gradient(ellipse at 20% 0%, rgba(13, 148, 136, 0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(217, 119, 6, 0.04) 0%, transparent 50%)",
+              ? "radial-gradient(ellipse at 20% 0%, rgba(76, 175, 130, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(201, 150, 58, 0.05) 0%, transparent 50%)"
+              : "radial-gradient(ellipse at 20% 0%, rgba(27, 94, 69, 0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(201, 150, 58, 0.04) 0%, transparent 50%)",
         }}
       />
 
-      <div className="relative z-10 max-w-lg mx-auto px-5 pt-6">
+      <div className="relative z-10 max-w-lg mx-auto px-5 pt-6 sm:pt-24">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold">{greeting}, {userName || "friend"} 👋</h1>
+            <h1 className="text-xl font-bold">
+              {greeting}, {userName || "friend"} 👋
+            </h1>
             <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
@@ -357,27 +330,17 @@ export default function DashboardClient() {
               })}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className="glass glass-hover p-2.5 cursor-pointer"
-              style={{ borderRadius: "var(--radius-full)" }}
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="glass glass-hover p-2.5 cursor-pointer text-sm"
-              style={{ borderRadius: "var(--radius-full)" }}
-              aria-label="Sign out"
-            >
-              👋
-            </button>
-          </div>
+          <button
+            onClick={toggleTheme}
+            className="glass glass-hover p-2.5 cursor-pointer"
+            style={{ borderRadius: "var(--radius-full)" }}
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? "☀️" : "🌙"}
+          </button>
         </div>
 
-        {/* Daily Quote */}
+        {/* Daily Quote — Arabic + English */}
         <div
           className="glass p-4 mb-5 animate-fade-in"
           style={{ borderRadius: "var(--radius-lg)" }}
@@ -385,40 +348,46 @@ export default function DashboardClient() {
           <p className="text-sm italic" style={{ color: "var(--foreground-muted)" }}>
             &ldquo;{todayQuote.text}&rdquo;
           </p>
-          <p className="text-xs mt-1 opacity-60">{todayQuote.source}</p>
+          <p
+            className="text-xs mt-1 font-medium"
+            style={{ color: "var(--accent)", opacity: 0.85 }}
+          >
+            — {todayQuote.source}
+          </p>
         </div>
 
-        {/* Streak & Progress */}
+        {/* Streak & Progress row */}
         <div className="flex gap-3 mb-5">
           {/* Streak card */}
           <div
             className="glass flex-1 p-4 text-center relative"
             style={{ borderRadius: "var(--radius-lg)" }}
           >
-            {/* Grace Shield Indicator */}
-            {streak?.last_grace_date && (
-              (() => {
-                const diffDays = Math.floor((new Date().getTime() - new Date(streak.last_grace_date).getTime()) / (1000 * 3600 * 24));
-                if (diffDays <= 7) {
-                  return (
-                    <div 
-                      className="absolute top-2 right-2 text-xs flex items-center gap-1 bg-background px-2 py-0.5 rounded-full border shadow-sm animate-fade-in"
-                      style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-                      title="Grace day used this week. Your streak is protected!"
-                    >
-                      <span>🛡️</span> Grace
-                    </div>
-                  );
-                }
-                return null;
-              })()
+            {isGraceActive && (
+              <div
+                className="absolute top-2 right-2 text-xs flex items-center gap-1 px-2 py-0.5 rounded-full animate-fade-in"
+                style={{
+                  border: "1px solid var(--accent)",
+                  color: "var(--accent)",
+                  background: "rgba(201, 150, 58, 0.1)",
+                }}
+                title="Grace day used this week — streak protected!"
+              >
+                <span>🛡️</span> Grace
+              </div>
             )}
 
             <div className="text-3xl mb-1 animate-streak-fire">🔥</div>
-            <div className="text-2xl font-bold">{streak?.current_streak || 0}</div>
+            <div
+              className="text-3xl font-bold mb-0.5"
+              style={{ color: "var(--accent)" }}
+            >
+              {streak?.current_streak || 0}
+            </div>
             <div className="text-xs" style={{ color: "var(--foreground-muted)" }}>
               day streak
             </div>
+
             {streak && streak.current_streak > 0 && (
               <div className="flex flex-wrap justify-center gap-1 mt-2">
                 {getMilestones(streak.current_streak).map((m) => (
@@ -432,13 +401,18 @@ export default function DashboardClient() {
                 ))}
               </div>
             )}
-            
+
             {streak && streak.current_streak > 0 && (
               <button
                 onClick={shareMilestone}
-                className="mt-3 text-xs bg-primary/20 hover:bg-primary/30 text-primary px-3 py-1.5 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto"
+                className="mt-3 text-xs px-3 py-1.5 rounded-full transition-colors flex items-center justify-center gap-1 mx-auto"
+                style={{
+                  background: "rgba(201, 150, 58, 0.15)",
+                  color: "var(--accent)",
+                  border: "1px solid rgba(201, 150, 58, 0.3)",
+                }}
               >
-                <span>📤</span> Share Milestone
+                <span>📤</span> Share
               </button>
             )}
 
@@ -453,35 +427,42 @@ export default function DashboardClient() {
             )}
           </div>
 
-          {/* Today's progress */}
+          {/* Progress ring */}
           <div
             className="glass flex-1 p-4 text-center"
             style={{ borderRadius: "var(--radius-lg)" }}
           >
-            <div className="relative w-16 h-16 mx-auto mb-2">
-              <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+            <div className="relative w-20 h-20 mx-auto mb-2">
+              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
                 <circle
-                  cx="32"
-                  cy="32"
-                  r="28"
+                  cx="40"
+                  cy="40"
+                  r="34"
                   fill="none"
                   stroke="var(--surface-border)"
-                  strokeWidth="4"
+                  strokeWidth="5"
                 />
                 <circle
-                  cx="32"
-                  cy="32"
-                  r="28"
+                  cx="40"
+                  cy="40"
+                  r="34"
                   fill="none"
-                  stroke="var(--primary)"
-                  strokeWidth="4"
-                  strokeDasharray={`${(completionPercentage / 100) * 175.93} 175.93`}
+                  stroke={completionPercentage === 100 ? "var(--accent)" : "var(--primary)"}
+                  strokeWidth="5"
+                  strokeDasharray={`${(completionPercentage / 100) * 213.63} 213.63`}
                   strokeLinecap="round"
                   className="transition-all duration-500"
                 />
               </svg>
-              <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
-                {completionPercentage}%
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span
+                  className="text-base font-bold"
+                  style={{
+                    color: completionPercentage === 100 ? "var(--accent)" : "var(--foreground)",
+                  }}
+                >
+                  {completionPercentage}%
+                </span>
               </div>
             </div>
             <div className="text-xs" style={{ color: "var(--foreground-muted)" }}>
@@ -490,56 +471,53 @@ export default function DashboardClient() {
           </div>
         </div>
 
-        {/* Shawwal Tracker */}
+        {/* Shawwal Tracker — crescent moons */}
         <div
-          className="glass p-4 mb-5"
-          style={{
-            borderRadius: "var(--radius-lg)",
-            border: "1px solid rgba(217, 119, 6, 0.2)",
-            background: theme === "dark" ? "rgba(217, 119, 6, 0.06)" : "rgba(217, 119, 6, 0.03)",
-          }}
+          className="glass-gold p-4 mb-5"
+          style={{ borderRadius: "var(--radius-lg)" }}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🌙</span>
-              <div>
-                <h3 className="text-sm font-semibold">Shawwal Fasting</h3>
-                <p className="text-xs" style={{ color: "var(--foreground-muted)" }}>
-                  {shawwalDaysCompleted}/6 days complete
-                </p>
-              </div>
+            <div>
+              <h3 className="text-sm font-semibold">Shawwal Fasting</h3>
+              <p className="text-xs" style={{ color: "var(--foreground-muted)" }}>
+                {shawwalDaysCompleted}/6 days — like fasting the whole year
+              </p>
             </div>
             <button
               onClick={toggleShawwalFast}
               className="btn text-xs px-3 py-1.5 cursor-pointer"
               style={{
                 background:
-                  shawwalDaysCompleted < 6 ? "var(--accent)" : "var(--success)",
+                  shawwalDaysCompleted >= 6
+                    ? "var(--success)"
+                    : "var(--gradient-gold)",
                 color: "white",
                 borderRadius: "var(--radius-full)",
               }}
             >
-              {shawwalDaysCompleted >= 6 ? "Complete! ✓" : "Log Today"}
+              {shawwalDaysCompleted >= 6 ? "Complete ✓" : "Log Today"}
             </button>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center">
             {[1, 2, 3, 4, 5, 6].map((day) => (
               <div
                 key={day}
-                className="flex-1 h-2 rounded-full transition-all duration-300"
+                className="flex-1 flex items-center justify-center text-xl transition-all duration-300"
                 style={{
-                  background:
-                    day <= shawwalDaysCompleted
-                      ? "var(--accent)"
-                      : "var(--surface-border)",
+                  filter: day <= shawwalDaysCompleted ? "none" : "grayscale(1) opacity(0.3)",
+                  transform: day <= shawwalDaysCompleted ? "scale(1.1)" : "scale(1)",
                 }}
-              />
+              >
+                🌙
+              </div>
             ))}
           </div>
         </div>
 
         {/* Habits List */}
-        <h2 className="text-lg font-semibold mb-3">Today&apos;s Habits</h2>
+        <h2 className="text-base font-semibold mb-3" style={{ color: "var(--foreground-muted)" }}>
+          TODAY&apos;S HABITS
+        </h2>
         <div className="space-y-3 mb-6">
           {habits.map((habit, index) => {
             const isCompleted = todayLogs[habit.id];
@@ -547,35 +525,37 @@ export default function DashboardClient() {
               <button
                 key={habit.id}
                 onClick={() => toggleHabit(habit.id)}
-                className="glass glass-hover w-full p-4 flex items-center gap-4 text-left cursor-pointer animate-slide-up transition-all duration-200"
+                className="glass glass-hover w-full p-5 flex items-center gap-4 text-left cursor-pointer animate-slide-up transition-all duration-200"
                 style={{
                   borderRadius: "var(--radius-lg)",
                   animationDelay: `${index * 60}ms`,
                   animationFillMode: "both",
                   border: isCompleted
-                    ? "1px solid rgba(34, 197, 94, 0.3)"
+                    ? "1px solid rgba(34, 197, 94, 0.35)"
                     : "1px solid var(--surface-border)",
                   background: isCompleted
                     ? theme === "dark"
-                      ? "rgba(34, 197, 94, 0.08)"
+                      ? "rgba(34, 197, 94, 0.07)"
                       : "rgba(34, 197, 94, 0.05)"
                     : undefined,
                 }}
               >
                 {/* Check circle */}
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
+                  className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
                   style={{
-                    background: isCompleted ? "var(--success)" : "transparent",
+                    background: isCompleted
+                      ? "var(--success)"
+                      : "var(--background-secondary)",
                     border: isCompleted
-                      ? "2px solid var(--success)"
-                      : "2px solid var(--foreground-muted)",
+                      ? "none"
+                      : "2px solid var(--surface-border)",
                   }}
                 >
                   {isCompleted ? (
-                    <span className="text-white animate-check">✓</span>
+                    <span className="text-white font-bold animate-check">✓</span>
                   ) : (
-                    <span className="text-lg">{habit.icon}</span>
+                    <span className="text-xl">{habit.icon}</span>
                   )}
                 </div>
 
@@ -583,22 +563,24 @@ export default function DashboardClient() {
                 <div className="flex-1 min-w-0">
                   <h3
                     className="font-medium transition-all duration-200"
-                    style={{
-                      textDecoration: isCompleted ? "line-through" : "none",
-                      opacity: isCompleted ? 0.7 : 1,
-                    }}
+                    style={{ color: "var(--foreground)" }}
                   >
                     {habit.name}
                   </h3>
-                  <p className="text-xs truncate" style={{ color: "var(--foreground-muted)" }}>
+                  <p
+                    className="text-xs truncate mt-0.5"
+                    style={{ color: "var(--foreground-muted)" }}
+                  >
                     {habit.accepted_amount || habit.suggested_amount || ""}
                   </p>
                 </div>
 
-                {/* Status */}
                 {isCompleted && (
-                  <span className="text-xs font-medium animate-bounce-in" style={{ color: "var(--success)" }}>
-                    Done!
+                  <span
+                    className="text-xs font-semibold animate-bounce-in shrink-0"
+                    style={{ color: "var(--success)" }}
+                  >
+                    Done ✓
                   </span>
                 )}
               </button>
@@ -613,14 +595,17 @@ export default function DashboardClient() {
             style={{
               borderRadius: "var(--radius-xl)",
               border: "1px solid rgba(34, 197, 94, 0.3)",
-              background: theme === "dark"
-                ? "rgba(34, 197, 94, 0.08)"
-                : "rgba(34, 197, 94, 0.05)",
+              background:
+                theme === "dark"
+                  ? "rgba(34, 197, 94, 0.07)"
+                  : "rgba(34, 197, 94, 0.04)",
             }}
           >
-            <div className="text-4xl mb-2">🎉</div>
+            <div className="flex justify-center gap-2 text-3xl mb-3 animate-float">
+              🎉 🤲 ⭐
+            </div>
             <h3 className="font-bold text-lg mb-1" style={{ color: "var(--success)" }}>
-              MashaAllah! All habits complete!
+              MashaAllah! All done!
             </h3>
             <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
               May Allah accept your efforts and make it easy for you.
@@ -635,7 +620,7 @@ export default function DashboardClient() {
             className="text-sm cursor-pointer underline"
             style={{ color: "var(--foreground-muted)" }}
           >
-            Manage habits & settings
+            Manage habits &amp; settings
           </button>
         </div>
       </div>
@@ -656,10 +641,7 @@ export default function DashboardClient() {
               <p className="text-sm mb-1" style={{ color: "var(--foreground-muted)" }}>
                 Everyone stumbles. What matters is getting back up.
               </p>
-              <p
-                className="text-sm italic mb-6"
-                style={{ color: "var(--primary)" }}
-              >
+              <p className="text-sm italic mb-6" style={{ color: "var(--primary)" }}>
                 &ldquo;The best of sinners are those who repent.&rdquo;
                 <span className="block text-xs opacity-70">— Sunan at-Tirmidhi</span>
               </p>
@@ -670,10 +652,7 @@ export default function DashboardClient() {
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={resetStreak}
-                  className="btn btn-primary flex-1"
-                >
+                <button onClick={resetStreak} className="btn btn-primary flex-1">
                   Start Fresh 🌱
                 </button>
               </div>
