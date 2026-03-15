@@ -216,6 +216,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  font-weight: 300;
+}
+
+
 /* ---------- Card Utilities (solid, no blur) ---------- */
 .glass {
   background: var(--surface);

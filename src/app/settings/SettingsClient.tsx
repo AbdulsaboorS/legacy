@@ -106,7 +106,7 @@ export default function SettingsClient() {
       <div className="relative z-10 max-w-lg mx-auto px-5 pt-6 sm:pt-24">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold">Settings</h1>
+          <h1 className="text-2xl">Settings</h1>
           <p className="text-sm mt-1" style={{ color: "var(--foreground-muted)" }}>
             Manage your habits and preferences.
           </p>

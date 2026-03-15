@@ -309,7 +309,7 @@ export default function DashboardClient() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold">
+            <h1 className="text-xl">
               {greeting}, {userName || "friend"} 👋
             </h1>
             <p className="text-sm" style={{ color: "var(--foreground-muted)" }}>
@@ -468,7 +468,7 @@ export default function DashboardClient() {
         >
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-sm font-semibold">Shawwal Fasting</h3>
+              <h3 className="text-sm">Shawwal Fasting</h3>
               <p className="text-xs" style={{ color: "var(--foreground-muted)" }}>
                 {shawwalDaysCompleted}/6 days — like fasting the whole year
               </p>
@@ -505,7 +505,7 @@ export default function DashboardClient() {
         </div>
 
         {/* Habits List */}
-        <h2 className="text-base font-semibold mb-3" style={{ color: "var(--foreground-muted)" }}>
+        <h2 className="text-base mb-3" style={{ color: "var(--foreground-muted)" }}>
           TODAY&apos;S HABITS
         </h2>
         <div className="space-y-3 mb-6">

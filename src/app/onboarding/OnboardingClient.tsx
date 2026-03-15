@@ -302,7 +302,7 @@ export default function OnboardingClient() {
         {/* ===== STEP 1: Profile ===== */}
         {step === 1 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h2 className="text-2xl font-bold mb-2">Welcome to Legacy 🌙</h2>
+            <h2 className="text-2xl mb-2">Welcome to Legacy 🌙</h2>
             <p className="mb-6" style={{ color: "var(--foreground-muted)" }}>
               Let&apos;s personalize your experience.
             </p>
@@ -378,7 +378,7 @@ export default function OnboardingClient() {
         {/* ===== STEP 2: Select Habits ===== */}
         {step === 2 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h2 className="text-2xl font-bold mb-2">Build your Core 3</h2>
+            <h2 className="text-2xl mb-2">Build your Core 3</h2>
             <p className="mb-6" style={{ color: "var(--foreground-muted)" }}>
               Select up to 3 habits to focus on. Less is more.
             </p>
@@ -500,7 +500,7 @@ export default function OnboardingClient() {
         {/* ===== STEP 3: AI Suggestions ===== */}
         {step === 3 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h2 className="text-2xl font-bold mb-2">Your graceful step-down plan</h2>
+            <h2 className="text-2xl mb-2">Your graceful step-down plan</h2>
             <p className="mb-6" style={{ color: "var(--foreground-muted)" }}>
               AI-powered suggestions to make your habits sustainable.
             </p>
@@ -663,7 +663,7 @@ export default function OnboardingClient() {
         {/* ===== STEP 4: Review & Confirm ===== */}
         {step === 4 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h2 className="text-2xl font-bold mb-2">Your Post-Ramadan Plan</h2>
+            <h2 className="text-2xl mb-2">Your Post-Ramadan Plan</h2>
             <p className="mb-6" style={{ color: "var(--foreground-muted)" }}>
               Review your habits and launch your journey.
             </p>
