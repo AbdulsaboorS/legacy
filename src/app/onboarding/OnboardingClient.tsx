@@ -80,6 +80,7 @@ export default function OnboardingClient() {
   const [customHabitName, setCustomHabitName] = useState("");
   const [includeShawwal, setIncludeShawwal] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [savingStep, setSavingStep] = useState<"saving" | "generating">("saving");
 
   const gridRef = useRef<HTMLDivElement>(null);
   const MAX_HABITS = 3;
@@ -215,6 +216,48 @@ export default function OnboardingClient() {
 
       const { error: habitsError } = await supabase.from("habits").upsert(habitsToInsert, { onConflict: "user_id,name" });
       if (habitsError) throw habitsError;
+
+      // Get saved habit IDs so we can create 28-day AI plans
+      const { data: savedHabits } = await supabase
+        .from("habits")
+        .select("id, name")
+        .eq("user_id", user.id)
+        .in("name", selectedHabits.map((h) => h.name));
+
+      if (savedHabits && savedHabits.length > 0) {
+        setSavingStep("generating");
+        await Promise.all(
+          savedHabits.map(async (savedHabit) => {
+            const h = selectedHabits.find((s) => s.name === savedHabit.name);
+            if (!h) return;
+            try {
+              const res = await fetch("/api/ai/plan/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ habitId: savedHabit.id, habitName: h.name, ramadanAmount: h.ramadanAmount, acceptedAmount: h.acceptedAmount || h.suggestedAmount || "", gender }),
+              });
+              if (!res.body) return;
+              const reader = res.body.getReader();
+              const decoder = new TextDecoder();
+              let accumulated = "";
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                for (const line of decoder.decode(value, { stream: true }).split("\n")) {
+                  if (!line.startsWith("data: ")) continue;
+                  const payload = line.slice(6);
+                  if (payload === "[DONE]") break;
+                  try { const p = JSON.parse(payload) as { text?: string }; if (p.text) accumulated += p.text; } catch {}
+                }
+              }
+              const plan = JSON.parse(accumulated);
+              await fetch("/api/ai/plan/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ habitId: savedHabit.id, plan }) });
+            } catch {
+              // Non-blocking — plan generation failure doesn't block onboarding
+            }
+          })
+        );
+      }
 
       await supabase.from("streaks").upsert(
         { user_id: user.id, current_streak: 0, longest_streak: 0, total_completions: 0 },
@@ -578,7 +621,7 @@ export default function OnboardingClient() {
                 disabled={isSaving}
                 style={{ ...S.btnAmber, opacity: isSaving ? 0.7 : 1, cursor: isSaving ? "not-allowed" : "pointer", padding: "14px 36px", fontSize: "0.9rem" }}
               >
-                {isSaving ? "Saving..." : "Start My Legacy"}
+                {isSaving ? (savingStep === "generating" ? "Generating 28-day plans..." : "Saving...") : "Start My Legacy"}
               </button>
             </div>
           </div>
