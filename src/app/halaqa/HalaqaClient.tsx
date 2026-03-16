@@ -3,34 +3,107 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useTheme } from "@/components/ThemeProvider";
 import { useToast } from "@/components/Toast";
 import type { Halaqa } from "@/lib/types";
 
-interface MemberWithStreak {
-  user_id: string;
-  preferred_name: string;
-  completed_today: boolean;
-  current_streak: number;
+interface CircleCardData {
+  halaqa: Halaqa;
+  memberCount: number;
+  doneCount: number;
+  memberPreviews: { preferred_name: string }[];
+}
+
+const AVATAR_PALETTE = ["#D97706", "#0D9488", "#64748B", "#E11D48"];
+
+function getAvatarColor(name: string): string {
+  const hash = name.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function AvatarStack({ members }: { members: { preferred_name: string }[] }) {
+  const visible = members.slice(0, 4);
+  const overflow = members.length - visible.length;
+
+  return (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      {visible.map((m, i) => (
+        <div
+          key={i}
+          style={{
+            width: "24px",
+            height: "24px",
+            borderRadius: "50%",
+            background: getAvatarColor(m.preferred_name),
+            border: "2px solid var(--surface)",
+            marginLeft: i === 0 ? 0 : "-8px",
+            zIndex: visible.length - i,
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontSize: "0.6rem",
+            fontWeight: 700,
+          }}
+        >
+          {getInitials(m.preferred_name)}
+        </div>
+      ))}
+      {overflow > 0 && (
+        <div
+          style={{
+            width: "24px",
+            height: "24px",
+            borderRadius: "50%",
+            background: "var(--surface-border)",
+            border: "2px solid var(--surface)",
+            marginLeft: "-8px",
+            zIndex: 0,
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--foreground-muted)",
+            fontSize: "0.6rem",
+            fontWeight: 700,
+          }}
+        >
+          +{overflow}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function HalaqaClient() {
   const router = useRouter();
-  const { theme } = useTheme();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [userGender, setUserGender] = useState<"Brother" | "Sister">("Brother");
-  const [hasLoggedToday, setHasLoggedToday] = useState(false);
   const [myHalaqas, setMyHalaqas] = useState<Halaqa[]>([]);
-  const [activeTab, setActiveTab] = useState<"lobby" | "mine">("mine");
+  const [activeTab, setActiveTab] = useState<"lobby" | "mine">(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("halaqaTab");
+      sessionStorage.removeItem("halaqaTab"); // consume once
+      return (saved as "lobby" | "mine") ?? "mine";
+    }
+    return "mine";
+  });
   const [publicLobbies, setPublicLobbies] = useState<(Halaqa & { member_count: number })[]>([]);
-  const [activeHalaqaId, setActiveHalaqaId] = useState<string | null>(null);
-  const [members, setMembers] = useState<MemberWithStreak[]>([]);
   const [creating, setCreating] = useState(false);
   const [savingAction, setSavingAction] = useState(false);
+  const [circleCards, setCircleCards] = useState<CircleCardData[]>([]);
 
-  // Create circle modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newCircleName, setNewCircleName] = useState("");
 
@@ -39,7 +112,9 @@ export default function HalaqaClient() {
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       router.push("/");
@@ -53,15 +128,6 @@ export default function HalaqaClient() {
       .single();
 
     if (profile) setUserGender(profile.gender as "Brother" | "Sister");
-
-    const { count } = await supabase
-      .from("habit_logs")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("date", today)
-      .eq("completed", true);
-
-    setHasLoggedToday((count || 0) > 0);
 
     const { data: membershipData } = await supabase
       .from("halaqa_members")
@@ -77,10 +143,6 @@ export default function HalaqaClient() {
 
       if (halaqasData) {
         setMyHalaqas(halaqasData);
-        if (halaqasData.length > 0 && !activeHalaqaInitialized.current) {
-          setActiveHalaqaId(halaqasData[0].id);
-          activeHalaqaInitialized.current = true;
-        }
       }
     } else {
       setActiveTab("lobby");
@@ -103,71 +165,75 @@ export default function HalaqaClient() {
     }
 
     setLoading(false);
-  }, [router, today]);
+  }, [router]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    if (!activeHalaqaId || !hasLoggedToday) return;
+  const loadCircleCardData = useCallback(async () => {
+    if (myHalaqas.length === 0) return;
 
-    const loadGridData = async () => {
-      const supabase = createClient();
+    const supabase = createClient();
 
-      const { data: memberRows } = await supabase
-        .from("halaqa_members")
-        .select("user_id")
-        .eq("halaqa_id", activeHalaqaId);
+    const cards: CircleCardData[] = await Promise.all(
+      myHalaqas.map(async (halaqa) => {
+        const { data: memberRows } = await supabase
+          .from("halaqa_members")
+          .select("user_id, profiles(preferred_name)")
+          .eq("halaqa_id", halaqa.id);
 
-      if (!memberRows) return;
-      const userIds = memberRows.map((m) => m.user_id);
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, preferred_name")
-        .in("id", userIds);
-
-      const { data: streaks } = await supabase
-        .from("streaks")
-        .select("user_id, current_streak")
-        .in("user_id", userIds);
-
-      const { data: logs } = await supabase
-        .from("habit_logs")
-        .select("user_id")
-        .in("user_id", userIds)
-        .eq("date", today)
-        .eq("completed", true);
-
-      const logSet = new Set(logs?.map((l) => l.user_id));
-      const streakMap = new Map(streaks?.map((s) => [s.user_id, s.current_streak]));
-
-      const gridMembers: MemberWithStreak[] = (profiles || []).map((p) => ({
-        user_id: p.id,
-        preferred_name: p.preferred_name,
-        completed_today: logSet.has(p.id),
-        current_streak: streakMap.get(p.id) || 0,
-      }));
-
-      gridMembers.sort((a, b) => {
-        if (a.completed_today === b.completed_today) {
-          return b.current_streak - a.current_streak;
+        // Handle RLS propagation delay for newly created circles
+        if (!memberRows || memberRows.length === 0) {
+          return {
+            halaqa,
+            memberCount: 1,
+            doneCount: 0,
+            memberPreviews: [],
+          };
         }
-        return a.completed_today ? -1 : 1;
-      });
 
-      setMembers(gridMembers);
-    };
+        const memberUserIds = memberRows.map((m) => m.user_id);
 
-    loadGridData();
-  }, [activeHalaqaId, hasLoggedToday, today]);
+        const { data: logs } = await supabase
+          .from("habit_logs")
+          .select("user_id")
+          .in("user_id", memberUserIds)
+          .eq("date", today)
+          .eq("completed", true);
+
+        const doneCount = new Set(logs?.map((r) => r.user_id)).size;
+
+        const memberPreviews = memberRows
+          .map((m) => {
+            const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
+            return profile ? { preferred_name: (profile as { preferred_name: string }).preferred_name } : null;
+          })
+          .filter((p): p is { preferred_name: string } => p !== null);
+
+        return {
+          halaqa,
+          memberCount: memberRows.length,
+          doneCount,
+          memberPreviews,
+        };
+      })
+    );
+
+    setCircleCards(cards);
+  }, [myHalaqas, today]);
+
+  useEffect(() => {
+    loadCircleCardData();
+  }, [loadCircleCardData]);
 
   const joinLobby = async (halaqaId: string) => {
     setSavingAction(true);
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase.from("halaqa_members").upsert(
@@ -176,11 +242,8 @@ export default function HalaqaClient() {
       );
       if (error) throw error;
 
-      activeHalaqaInitialized.current = true;
-      setActiveHalaqaId(halaqaId);
-      setActiveTab("mine");
-      await loadData();
-      toast.success("Joined! Welcome to the circle 🤝");
+      toast.success("Joined! Welcome to the circle");
+      router.push(`/halaqa/${halaqaId}`);
     } catch (error) {
       console.error("Failed to join circle:", error);
       toast.error("Failed to join. Please try again.");
@@ -195,46 +258,45 @@ export default function HalaqaClient() {
     setShowCreateModal(false);
 
     const supabase = createClient();
-    let createdHalaqaId: string | null = null;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const inviteCode = crypto.randomUUID().replace(/-/g, "").substring(0, 6).toUpperCase();
       const circleName = newCircleName.trim();
 
-      const { data: newHalaqaId, error: halaqaError } = await supabase
-        .rpc('create_private_halaqa', {
+      const { data: newHalaqaId, error: halaqaError } = await supabase.rpc(
+        "create_private_halaqa",
+        {
           p_name: circleName,
           p_gender: userGender,
-          p_invite_code: inviteCode
-        });
+          p_invite_code: inviteCode,
+        }
+      );
 
       if (halaqaError) throw halaqaError;
 
+      // Construct the halaqa object locally — don't fetch from DB since RLS
+      // on halaqas has a recursive dependency through halaqa_members that
+      // prevents reading the row immediately after creation
+      const newHalaqa: import("@/lib/types").Halaqa = {
+        id: newHalaqaId,
+        name: circleName,
+        invite_code: inviteCode,
+        gender: userGender,
+        is_public: false,
+        max_members: 8,
+        created_by: user.id,
+        created_at: new Date().toISOString(),
+      };
+      setMyHalaqas((prev) =>
+        prev.find((h) => h.id === newHalaqaId) ? prev : [...prev, newHalaqa]
+      );
       activeHalaqaInitialized.current = true;
-      setActiveHalaqaId(newHalaqaId);
-      setActiveTab("mine");
-      await loadData();
-
-      const url = `${window.location.origin}/join/${inviteCode}`;
-      if (navigator.share) {
-        navigator
-          .share({
-            title: "Join my Legacy Circle",
-            text: `Hold me accountable post-Ramadan. Join my circle: ${circleName}`,
-            url,
-          })
-          .catch(console.error);
-      } else {
-        try {
-          await navigator.clipboard.writeText(url);
-          toast.copied("Invite link copied to clipboard!");
-        } catch {
-          toast.info(`Invite code: ${inviteCode}`);
-        }
-      }
+      router.push(`/halaqa/${newHalaqaId}`);
     } catch (error) {
       console.error("Failed to create circle:", error);
       toast.error("Failed to create circle. Please try again.");
@@ -244,159 +306,152 @@ export default function HalaqaClient() {
     }
   };
 
-  const sendReaction = async (receiverId: string, emoji: string) => {
-    if (!activeHalaqaId) return;
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (user && user.id !== receiverId) {
-      await supabase.from("halaqa_reactions").insert({
-        halaqa_id: activeHalaqaId,
-        sender_id: user.id,
-        receiver_id: receiverId,
-        emoji,
-        date: today,
-      });
-      toast.success(`MashaAllah! ${emoji} sent!`);
-    }
-  };
-
-  const copyInviteLink = async (halaqaId: string) => {
-    const code = myHalaqas.find((h) => h.id === halaqaId)?.invite_code;
-    const url = `${window.location.origin}/join/${code}`;
-    if (navigator.share) {
-      navigator.share({ title: "Join my Legacy Circle", url }).catch(console.error);
-    } else {
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.copied("Invite link copied!");
-      } catch {
-        toast.info(`Invite code: ${code}`);
-      }
-    }
-  };
-
   if (loading) {
     return (
-      <main className="min-h-dvh flex items-center justify-center relative">
-        <div className="text-center animate-pulse-soft">
-          <div className="text-4xl mb-4 animate-float">👥</div>
-          <p style={{ color: "var(--foreground-muted)" }}>Loading circles...</p>
-        </div>
+      <main
+        style={{
+          minHeight: "100dvh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--background)",
+        }}
+      >
+        <p style={{ color: "var(--foreground-muted)" }}>Loading circles...</p>
       </main>
     );
   }
 
   return (
-    <main className="relative min-h-dvh pb-24">
-      <div className="relative z-10 max-w-lg mx-auto px-5 pt-6 sm:pt-24">
-        {/* Tab switcher */}
+    <main style={{ minHeight: "100dvh", background: "var(--background)" }}>
+      <div style={{ maxWidth: "560px", margin: "0 auto", padding: "48px 24px 100px" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: "36px" }}>
+          <h1
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontWeight: 400,
+              fontSize: "2.4rem",
+              color: "var(--foreground)",
+            }}
+          >
+            Halaqa
+          </h1>
+        </div>
+
+        {/* Tab bar — underline style */}
         <div
-          className="flex rounded-xl p-1 mb-6 border"
           style={{
-            background: "var(--background-secondary)",
-            borderColor: "var(--surface-border)",
+            display: "flex",
+            borderBottom: "1.5px solid var(--surface-border)",
+            marginBottom: "28px",
           }}
         >
-          <button
-            className="flex-1 py-2 text-sm font-medium rounded-lg transition-all"
-            style={{
-              background: activeTab === "mine" ? "var(--surface)" : "transparent",
-              color:
-                activeTab === "mine" ? "var(--foreground)" : "var(--foreground-muted)",
-              boxShadow:
-                activeTab === "mine" ? "var(--shadow-sm)" : "none",
-            }}
-            onClick={() => setActiveTab("mine")}
-          >
-            My Circles
-          </button>
-          <button
-            className="flex-1 py-2 text-sm font-medium rounded-lg transition-all"
-            style={{
-              background: activeTab === "lobby" ? "var(--surface)" : "transparent",
-              color:
-                activeTab === "lobby" ? "var(--foreground)" : "var(--foreground-muted)",
-              boxShadow:
-                activeTab === "lobby" ? "var(--shadow-sm)" : "none",
-            }}
-            onClick={() => setActiveTab("lobby")}
-          >
-            Find a Circle
-          </button>
+          {(
+            [
+              { key: "mine", label: "My Circles" },
+              { key: "lobby", label: "Lobby" },
+            ] as const
+          ).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              style={{
+                flex: 1,
+                padding: "12px 0",
+                background: "none",
+                border: "none",
+                borderBottom:
+                  activeTab === key
+                    ? "2.5px solid var(--accent)"
+                    : "2.5px solid transparent",
+                marginBottom: "-1.5px",
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                fontWeight: activeTab === key ? 700 : 400,
+                color:
+                  activeTab === key ? "var(--foreground)" : "var(--foreground-muted)",
+                transition: "all 0.2s",
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* ===== LOBBY TAB ===== */}
         {activeTab === "lobby" && (
           <div className="animate-fade-in">
-            {/* Create private circle card */}
-            <button
-              onClick={() => setShowCreateModal(true)}
-              disabled={creating}
-              className="w-full glass glass-hover p-5 mb-6 text-center cursor-pointer"
+            <p
               style={{
-                borderRadius: "var(--radius-lg)",
-                border: "2px dashed rgba(217, 119, 6, 0.5)",
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "var(--foreground-muted)",
+                marginBottom: "16px",
               }}
             >
-              <span className="text-2xl mb-2 block">🤝</span>
-              <span
-                className="font-semibold block mb-1"
-                style={{ color: "var(--accent)" }}
-              >
-                {creating ? "Creating..." : "Create Private Circle"}
-              </span>
-              <span
-                className="text-xs block"
-                style={{ color: "var(--foreground-muted)" }}
-              >
-                Invite your friends with a private link.
-              </span>
-            </button>
-
-            <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider" style={{ color: "var(--foreground-muted)" }}>
               Public Lobbies ({userGender}s)
-            </h3>
-            <div className="space-y-3">
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                marginBottom: "28px",
+              }}
+            >
               {publicLobbies.length === 0 ? (
-                <div
-                  className="text-center p-6 glass text-sm"
+                <p
                   style={{
                     color: "var(--foreground-muted)",
-                    borderRadius: "var(--radius-md)",
+                    fontSize: "0.9rem",
+                    textAlign: "center",
+                    padding: "24px 0",
                   }}
                 >
-                  No open public lobbies right now. Create a circle to get started!
-                </div>
+                  No open public lobbies right now.
+                </p>
               ) : (
                 publicLobbies.map((lobby) => (
                   <div
                     key={lobby.id}
-                    className="glass p-4 flex items-center justify-between"
-                    style={{ borderRadius: "var(--radius-md)" }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "16px",
+                      border: "1.5px solid var(--surface-border)",
+                      borderRadius: "12px",
+                    }}
                   >
                     <div>
-                      <h4 className="font-semibold text-sm">{lobby.name}</h4>
-                      <div className="flex items-center gap-2 mt-1">
+                      <h4 style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: "6px" }}>
+                        {lobby.name}
+                      </h4>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <div
-                          className="h-1.5 rounded-full overflow-hidden"
                           style={{
                             width: "80px",
+                            height: "6px",
                             background: "var(--surface-border)",
+                            borderRadius: "999px",
+                            overflow: "hidden",
                           }}
                         >
                           <div
-                            className="h-full rounded-full transition-all"
                             style={{
+                              height: "100%",
                               width: `${(lobby.member_count / lobby.max_members) * 100}%`,
                               background: "var(--accent)",
+                              borderRadius: "999px",
+                              transition: "width 0.3s",
                             }}
                           />
                         </div>
-                        <span
-                          className="text-xs"
-                          style={{ color: "var(--foreground-muted)" }}
-                        >
+                        <span style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>
                           {lobby.member_count}/{lobby.max_members}
                         </span>
                       </div>
@@ -404,7 +459,18 @@ export default function HalaqaClient() {
                     <button
                       onClick={() => joinLobby(lobby.id)}
                       disabled={savingAction}
-                      className="btn btn-primary text-xs px-4 py-2"
+                      style={{
+                        height: "36px",
+                        padding: "0 20px",
+                        background: "var(--foreground)",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontWeight: 700,
+                        fontSize: "0.8rem",
+                        cursor: savingAction ? "not-allowed" : "pointer",
+                        opacity: savingAction ? 0.6 : 1,
+                      }}
                     >
                       Join
                     </button>
@@ -412,178 +478,140 @@ export default function HalaqaClient() {
                 ))
               )}
             </div>
+
+            {/* Create private circle button */}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              disabled={creating}
+              style={{
+                width: "100%",
+                height: "52px",
+                background: "var(--accent)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "12px",
+                fontWeight: 700,
+                fontSize: "0.85rem",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                cursor: creating ? "not-allowed" : "pointer",
+                opacity: creating ? 0.7 : 1,
+              }}
+            >
+              {creating ? "Creating..." : "+ Create Private Circle"}
+            </button>
           </div>
         )}
 
-        {/* ===== MY CIRCLES TAB — empty state ===== */}
+        {/* ===== MINE TAB — empty state ===== */}
         {activeTab === "mine" && myHalaqas.length === 0 && (
-          <div className="text-center p-8 animate-fade-in">
-            <div className="text-5xl mb-4 animate-float">🕌</div>
-            <h3 className="font-bold mb-2 text-lg">Join your first circle</h3>
-            <p
-              className="text-sm mb-6"
-              style={{ color: "var(--foreground-muted)" }}
+          <div
+            style={{ textAlign: "center", padding: "48px 0" }}
+            className="animate-fade-in"
+          >
+            <div style={{ fontSize: "3rem", marginBottom: "16px" }}>🕌</div>
+            <h3
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "1.5rem",
+                fontWeight: 400,
+                marginBottom: "8px",
+              }}
             >
-              Studies show you&apos;re 70% more likely to keep your habits with
-              an accountability squad.
+              Join your first circle
+            </h3>
+            <p
+              style={{
+                fontSize: "0.9rem",
+                color: "var(--foreground-muted)",
+                maxWidth: "300px",
+                margin: "0 auto",
+                marginBottom: "28px",
+              }}
+            >
+              Studies show you&apos;re 70% more likely to keep your habits with an
+              accountability squad.
             </p>
             <button
               onClick={() => setActiveTab("lobby")}
-              className="btn btn-primary w-full"
+              style={{
+                width: "100%",
+                height: "52px",
+                background: "var(--foreground)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "12px",
+                fontWeight: 700,
+                fontSize: "0.85rem",
+                letterSpacing: "0.1em",
+                cursor: "pointer",
+              }}
             >
               Find or Create a Circle
             </button>
           </div>
         )}
 
-        {/* ===== MY CIRCLES TAB — with circles ===== */}
+        {/* ===== MINE TAB — with circles ===== */}
         {activeTab === "mine" && myHalaqas.length > 0 && (
           <div className="animate-fade-in">
-            {/* Multi-halaqa pill switcher */}
-            {myHalaqas.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-4 mb-2 hidescrollbar">
-                {myHalaqas.map((hq) => (
-                  <button
-                    key={hq.id}
-                    onClick={() => setActiveHalaqaId(hq.id)}
-                    className="whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all shrink-0"
-                    style={{
-                      background:
-                        activeHalaqaId === hq.id
-                          ? "var(--primary)"
-                          : "var(--surface)",
-                      color:
-                        activeHalaqaId === hq.id
-                          ? "var(--primary-foreground)"
-                          : "var(--foreground)",
-                      border:
-                        activeHalaqaId === hq.id
-                          ? "none"
-                          : "1px solid var(--surface-border)",
-                    }}
-                  >
-                    {hq.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Reciprocal Gate */}
-            {!hasLoggedToday ? (
-              <div
-                className="glass p-8 text-center mt-4 animate-bounce-in"
-                style={{ borderRadius: "var(--radius-xl)" }}
-              >
-                <div className="text-5xl mb-4">🔒</div>
-                <h2 className="font-bold text-lg mb-2">Complete your habits first</h2>
-                <p
-                  className="text-sm mb-2"
-                  style={{ color: "var(--foreground-muted)" }}
-                >
-                  Muraqabah begins with yourself.
-                </p>
-                <p
-                  className="text-sm italic mb-6"
-                  style={{ color: "var(--accent)" }}
-                >
-                  Log your habits today, then witness your circle.
-                </p>
-                <button
-                  onClick={() => router.push("/dashboard")}
-                  className="btn btn-primary w-full"
-                >
-                  Go to Today&apos;s Habits
-                </button>
-              </div>
+            {circleCards.length === 0 ? (
+              // Loading state: skeleton cards
+              Array.from({ length: Math.min(myHalaqas.length, 2) }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: "100%",
+                    height: "72px",
+                    border: "1.5px solid var(--surface-border)",
+                    borderRadius: "12px",
+                    marginBottom: "12px",
+                    background: "var(--background-secondary)",
+                    backgroundImage:
+                      "linear-gradient(90deg, var(--background-secondary) 25%, var(--surface-border) 50%, var(--background-secondary) 75%)",
+                    backgroundSize: "200% 100%",
+                    animation: "shimmer 2s linear infinite",
+                  }}
+                />
+              ))
             ) : (
-              <div className="space-y-4 mt-2">
-                {/* Circle header */}
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-lg">
-                    {myHalaqas.find((h) => h.id === activeHalaqaId)?.name}
-                  </h3>
-                  <button
-                    onClick={() => activeHalaqaId && copyInviteLink(activeHalaqaId)}
-                    className="text-xs px-3 py-1.5 rounded-full transition-all"
-                    style={{
-                      background: "rgba(217, 119, 6, 0.12)",
-                      border: "1px solid rgba(217, 119, 6, 0.3)",
-                      color: "var(--accent)",
-                    }}
-                  >
-                    📋 Invite Link
-                  </button>
-                </div>
-
-                {/* Member cards */}
-                <div className="grid grid-cols-1 gap-3">
-                  {members.map((member, i) => (
-                    <div
-                      key={member.user_id}
-                      className="glass p-4 flex items-center gap-4 animate-slide-up"
+              circleCards.map((card) => (
+                <button
+                  key={card.halaqa.id}
+                  onClick={() => router.push(`/halaqa/${card.halaqa.id}`)}
+                  className="animate-fade-in"
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px",
+                    border: "1.5px solid var(--surface-border)",
+                    borderRadius: "12px",
+                    background: "var(--surface)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <div>
+                    <p
                       style={{
-                        borderRadius: "var(--radius-lg)",
-                        animationDelay: `${i * 50}ms`,
-                        animationFillMode: "both",
-                        border: member.completed_today
-                          ? "1px solid rgba(34, 197, 94, 0.35)"
-                          : "1px solid var(--surface-border)",
+                        fontWeight: 700,
+                        fontSize: "0.95rem",
+                        marginBottom: "4px",
+                        color: "var(--foreground)",
                       }}
                     >
-                      {/* Avatar initial */}
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
-                        style={{
-                          background: member.completed_today
-                            ? "var(--success)"
-                            : "var(--foreground-muted)",
-                          color: "white",
-                          opacity: member.completed_today ? 1 : 0.7,
-                        }}
-                      >
-                        {member.preferred_name?.[0]?.toUpperCase() || "?"}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium truncate">{member.preferred_name}</h4>
-                        <div
-                          className="flex items-center gap-1.5 text-xs"
-                          style={{ color: "var(--foreground-muted)" }}
-                        >
-                          <span>🔥</span>
-                          <span>{member.current_streak} days</span>
-                          {member.completed_today && (
-                            <span
-                              className="ml-1 font-semibold"
-                              style={{ color: "var(--success)" }}
-                            >
-                              ✓ Done today
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Reaction nudge buttons */}
-                      <div className="flex gap-1.5 shrink-0">
-                        {["🤲", "💪", "🔥"].map((emoji) => (
-                          <button
-                            key={emoji}
-                            onClick={() => sendReaction(member.user_id, emoji)}
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-transform hover:scale-110 active:scale-95"
-                            style={{
-                              background: "var(--background-secondary)",
-                              border: "1px solid var(--surface-border)",
-                            }}
-                            title={`Send ${emoji}`}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                      {card.halaqa.name}
+                    </p>
+                    <p style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>
+                      {card.doneCount}/{card.memberCount} done today
+                    </p>
+                  </div>
+                  <AvatarStack members={card.memberPreviews} />
+                </button>
+              ))
             )}
           </div>
         )}
@@ -592,15 +620,46 @@ export default function HalaqaClient() {
       {/* Create Circle Modal */}
       {showCreateModal && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+            background: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(6px)",
+          }}
         >
           <div
-            className="glass w-full max-w-sm p-6 animate-slide-up"
-            style={{ borderRadius: "var(--radius-xl)" }}
+            className="animate-slide-up"
+            style={{
+              background: "var(--surface)",
+              borderRadius: "16px",
+              padding: "28px",
+              width: "100%",
+              maxWidth: "480px",
+              border: "1px solid var(--surface-border)",
+            }}
           >
-            <h3 className="text-lg font-bold mb-1">Name your circle</h3>
-            <p className="text-sm mb-4" style={{ color: "var(--foreground-muted)" }}>
+            <h3
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "1.5rem",
+                fontWeight: 400,
+                marginBottom: "6px",
+              }}
+            >
+              Name your circle
+            </h3>
+            <p
+              style={{
+                fontSize: "0.875rem",
+                color: "var(--foreground-muted)",
+                marginBottom: "20px",
+              }}
+            >
               Choose a meaningful name for your accountability group.
             </p>
             <input
@@ -608,30 +667,57 @@ export default function HalaqaClient() {
               value={newCircleName}
               onChange={(e) => setNewCircleName(e.target.value)}
               placeholder="e.g., Dawn Brothers, Al-Fajr Sisters..."
-              className="w-full h-12 px-4 rounded-xl border-none text-base mb-4 outline-none"
               style={{
+                width: "100%",
+                height: "48px",
+                padding: "0 16px",
+                fontSize: "0.95rem",
                 background: "var(--background-secondary)",
+                border: `1.5px solid ${newCircleName ? "var(--accent)" : "var(--surface-border)"}`,
+                borderRadius: "10px",
+                outline: "none",
                 color: "var(--foreground)",
-                boxShadow: newCircleName ? "0 0 0 2px var(--accent)" : "0 0 0 1px var(--surface-border)",
+                boxSizing: "border-box",
+                marginBottom: "16px",
               }}
               onKeyDown={(e) => e.key === "Enter" && createPrivateGroup()}
               autoFocus
             />
-            <div className="flex gap-3">
+            <div style={{ display: "flex", gap: "12px" }}>
               <button
                 onClick={() => {
                   setShowCreateModal(false);
                   setNewCircleName("");
                 }}
-                className="btn btn-ghost flex-1"
+                style={{
+                  flex: 1,
+                  height: "48px",
+                  background: "transparent",
+                  border: "1.5px solid var(--surface-border)",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  color: "var(--foreground)",
+                  fontSize: "0.875rem",
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={createPrivateGroup}
                 disabled={!newCircleName.trim()}
-                className="btn btn-primary flex-1"
-                style={{ opacity: !newCircleName.trim() ? 0.5 : 1 }}
+                style={{
+                  flex: 1,
+                  height: "48px",
+                  background: "var(--accent)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  cursor: !newCircleName.trim() ? "not-allowed" : "pointer",
+                  fontWeight: 700,
+                  fontSize: "0.875rem",
+                  opacity: !newCircleName.trim() ? 0.5 : 1,
+                }}
               >
                 Create Circle
               </button>
