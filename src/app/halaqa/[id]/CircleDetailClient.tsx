@@ -102,6 +102,10 @@ export default function CircleDetailClient() {
     // 1. Load halaqa metadata
     // Check sessionStorage for a freshly-created halaqa — RLS recursive
     // dependency prevents reading the row from DB immediately after creation
+    // Check sessionStorage for a freshly-created halaqa — RLS recursive
+    // dependency prevents reading the row from DB immediately after creation.
+    // We keep the key until the DB fetch succeeds so React Strict Mode's
+    // double-effect invocation doesn't consume it on the first call.
     let pendingHalaqa: Halaqa | null = null;
     try {
       const raw = sessionStorage.getItem("pendingHalaqa");
@@ -109,7 +113,6 @@ export default function CircleDetailClient() {
         const parsed = JSON.parse(raw) as Halaqa;
         if (parsed.id === halaqaId) {
           pendingHalaqa = parsed;
-          sessionStorage.removeItem("pendingHalaqa");
         }
       }
     } catch {
@@ -121,6 +124,11 @@ export default function CircleDetailClient() {
       .select("*")
       .eq("id", halaqaId)
       .single();
+
+    // Once DB returns the row, the RLS propagation is complete — safe to clear
+    if (halaqaData) {
+      try { sessionStorage.removeItem("pendingHalaqa"); } catch { /* ignore */ }
+    }
 
     const resolvedHalaqa = halaqaData ?? pendingHalaqa;
     if (!resolvedHalaqa) {
