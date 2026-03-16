@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 02-02-PLAN.md (generate + refine streaming Edge routes)
-last_updated: "2026-03-16T05:27:44.984Z"
+stopped_at: Completed 02-03-PLAN.md (save and list Node routes)
+last_updated: "2026-03-16T05:30:29.608Z"
 last_activity: 2026-03-16 — Completed Plan 01-02 (CircleDetailClient)
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 20
 ---
 
@@ -53,6 +53,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 01-circles-ui P01 | 6min | 2 tasks | 2 files |
 | Phase 02-ai-web-flow-fixes P01 | 4min | 2 tasks | 2 files |
 | Phase 02-ai-web-flow-fixes P02 | 2min | 2 tasks | 2 files |
+| Phase 02-ai-web-flow-fixes P03 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - [Phase 02-ai-web-flow-fixes]: Append-only habit_plans versioning with is_active flag — full plan history preserved, SECURITY DEFINER RPC for atomic save
 - [Phase 02-ai-web-flow-fixes]: No responseMimeType application/json on Gemini — breaks streaming; format enforced via prompt only
 - [Phase 02-ai-web-flow-fixes]: Generate + refine routes stream-only; frontend calls /save after user approves plan
+- [Phase 02-ai-web-flow-fixes]: Save route calls save_habit_plan RPC (not multi-step UPDATE+INSERT) for atomic plan archival
+- [Phase 02-ai-web-flow-fixes]: List route relies on RLS for user isolation — no explicit user_id filter needed in query
 
 ### Pending Todos
 
@@ -83,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T05:27:44.982Z
-Stopped at: Completed 02-02-PLAN.md (generate + refine streaming Edge routes)
+Last session: 2026-03-16T05:30:29.606Z
+Stopped at: Completed 02-03-PLAN.md (save and list Node routes)
 Resume file: None

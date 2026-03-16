@@ -7,7 +7,7 @@ Seven phases. Web-first: finish circles, fix AI, polish flows, wire notification
 ## Phases
 
 - [x] **Phase 1: Circles UI** — Circle detail page and card list (highest value prop)
-- [ ] **Phase 2: AI + Web Flow Fixes** — Fix AI masterplan flow, finalize all web screens
+- [x] **Phase 2: AI + Web Flow Fixes** — Fix AI masterplan flow, finalize all web screens (completed 2026-03-16)
 - [ ] **Phase 3: Polish** — Streak sharing, join page redesign
 - [ ] **Phase 4: Push Notifications** — FCM infra (backend) + opt-in UI (frontend)
 - [ ] **Phase 5: PWA Hardening** — Offline support, install prompt, Lighthouse 90+
@@ -144,7 +144,7 @@ Plans:
 | Phase | Owner | Status | Notes |
 |-------|-------|--------|-------|
 | 1. Circles UI | Frontend | ✓ Complete | Both plans done, human verified |
-| 2. AI + Web Flow | 1/3 | In Progress|  |
+| 2. AI + Web Flow | 3/3 | Complete   | 2026-03-16 |
 | 3. Polish | Frontend | Not started | |
 | 4. Push Notifications | Backend + Frontend | Partially started | Migration + packages done |
 | 5. PWA Hardening | Frontend | Not started | |
