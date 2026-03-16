@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { habitId, habitName, ramadanAmount, acceptedAmount, gender } =
+  const { habitId, habitName, ramadanAmount, acceptedAmount, gender, intensity, timeAvailable } =
     await request.json();
 
   if (!habitId || !habitName) {
@@ -41,13 +41,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const intensityLabel = intensity === "easy" ? "gentle start, very gradual build-up"
+    : intensity === "full" ? "full commitment, maximum growth from day one"
+    : "moderate pace, steady and sustainable progress";
+
+  const timeLabel = timeAvailable === "5-10" ? "5–10 minutes per day"
+    : timeAvailable === "60+" ? "1 hour or more per day"
+    : "15–30 minutes per day";
+
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const prompt = `You are a knowledgeable Islamic advisor creating a 28-day post-Ramadan habit plan for a ${gender || "Muslim"}.
 
 Habit: ${habitName}
 Ramadan amount: ${ramadanAmount || "daily"}
-Committed post-Ramadan goal: ${acceptedAmount || ramadanAmount || "daily"}
+Post-Ramadan goal: ${acceptedAmount || ramadanAmount || "daily"}
+Intensity preference: ${intensityLabel}
+Time available per day: ${timeLabel}
 
 Generate a complete plan JSON with exactly this structure:
 {
