@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: testing
-stopped_at: Phase 2 complete + onboarding redesigned (6-step flow). User about to test.
-last_updated: "2026-03-16T12:00:00.000Z"
-last_activity: 2026-03-16 — Redesigned onboarding to 6-step flow, wired AI plan routes to dashboard
+stopped_at: Onboarding simplified to 4-step flow + background plan gen. User testing now.
+last_updated: "2026-03-16T18:00:00.000Z"
+last_activity: 2026-03-16 — Simplified onboarding (4 steps, no AI blocking), background plan gen, dashboard polling
 progress:
   total_phases: 7
   completed_phases: 2
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ## Current Position
 
-Phase: 2 of 7 (AI + Web Flow) — COMPLETE ✓ (verified 17/17)
+Phase: 2 of 7 (AI + Web Flow) — COMPLETE ✓
 Phase: 3 next (Polish — streak sharing, join page redesign)
-Status: USER TESTING Phase 2 deliverables right now. Resume after test feedback.
-Last activity: 2026-03-16 — Onboarding redesigned to 6-step flow + dashboard AI plan wired
+Status: USER TESTING onboarding + plan gen flow. Resume after test feedback.
+Last activity: 2026-03-16 — Simplified onboarding to 4-step flow, background AI plan gen, dashboard polling
 
 Progress: [██░░░░░░░░] 20%
 
@@ -69,8 +69,11 @@ Recent decisions affecting current work:
 - [Phase 01-circles-ui]: Removed hasLoggedToday gate from HalaqaClient — gate moves to detail page (plan 01-02)
 - [Phase 01-circles-ui]: AvatarStack as module-level component — avoids React reconciliation issues with inline definitions
 - [Phase 02-ai-web-flow-fixes]: Append-only habit_plans versioning with is_active flag — full plan history preserved, SECURITY DEFINER RPC for atomic save
-- [Phase 02-ai-web-flow-fixes]: No responseMimeType application/json on Gemini — breaks streaming; format enforced via prompt only
-- [Phase 02-ai-web-flow-fixes]: Generate + refine routes stream-only; frontend calls /save after user approves plan
+- [Phase 02-ai-web-flow-fixes]: No responseMimeType application/json on Gemini — breaks streaming; format enforced via prompt only (UPDATED: generate-and-save uses non-streaming so CAN use responseMimeType — and does)
+- [Phase 02-ai-web-flow-fixes]: Generate + refine routes stream-only; frontend calls /save after user approves plan (UPDATED: generate-and-save is non-streaming, handles save internally)
+- [Onboarding simplification]: 4-step flow — no AI blocking onboarding. Background gen fires on Step 2 Next for first 3 habits. Dashboard polls 3s/60s for plans.
+- [Onboarding simplification]: dailyActions removed from plan structure — cuts output tokens ~60%. Week N derived from created_at. Refine flow unchanged (still streaming).
+- [Onboarding simplification]: Unlimited habits allowed — first 3 get AI plans, rest tracked only.
 - [Phase 02-ai-web-flow-fixes]: Save route calls save_habit_plan RPC (not multi-step UPDATE+INSERT) for atomic plan archival
 - [Phase 02-ai-web-flow-fixes]: List route relies on RLS for user isolation — no explicit user_id filter needed in query
 
@@ -86,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T05:30:29.606Z
-Stopped at: Completed 02-03-PLAN.md (save and list Node routes)
+Last session: 2026-03-16T18:00:00.000Z
+Stopped at: Onboarding simplified + plan gen fixed. User testing. Next: Phase 3 (Polish) after test feedback.
 Resume file: None
