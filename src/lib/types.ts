@@ -282,3 +282,27 @@ export const PROPHETIC_QUOTES = [
     source: "Sahih Muslim 91",
   },
 ];
+
+// ================================================================
+// AI Habit Plan (Phase 2)
+// habit_plans table row shape + streaming plan shape
+// ================================================================
+
+export interface DailyAction {
+  day: number;    // 1–28
+  action: string; // specific task for that day (≤80 chars per Gemini prompt)
+  tip: string;    // motivational tip (≤100 chars per Gemini prompt)
+}
+
+export interface HabitPlan {
+  id: string;
+  habit_id: string;
+  user_id: string;
+  is_active: boolean;
+  version: number;
+  core_philosophy: string | null;
+  actionable_steps: ActionableStep[] | null;  // reuses existing ActionableStep type
+  weekly_roadmap: WeekEntry[] | null;          // reuses existing WeekEntry type
+  daily_actions: DailyAction[];
+  created_at: string; // ISO string — used by frontend to compute day N of 28
+}
