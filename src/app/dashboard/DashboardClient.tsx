@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PROPHETIC_QUOTES, type Habit, type HabitLog, type Streak, type HabitPlan } from "@/lib/types";
+import { PROPHETIC_QUOTES, type Habit, type HabitLog, type Streak, type HabitPlan, type WeekEntry } from "@/lib/types";
 import { useTheme } from "@/components/ThemeProvider";
 
 export default function DashboardClient() {
@@ -23,6 +23,9 @@ export default function DashboardClient() {
   const [refineStreaming, setRefineStreaming] = useState(false);
   const [refinedPlan, setRefinedPlan] = useState<Record<string, unknown> | null>(null);
   const [regeneratingHabitId, setRegeneratingHabitId] = useState<string | null>(null);
+  // polling state: 'pending' while generating, 'timeout' after 60s with no result
+  const [planPollingState, setPlanPollingState] = useState<Record<string, "pending" | "timeout">>({});
+  const pollingIntervals = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
   const todayQuote = PROPHETIC_QUOTES[new Date().getDate() % PROPHETIC_QUOTES.length];
   const today = new Date().toISOString().split("T")[0];
@@ -69,6 +72,13 @@ export default function DashboardClient() {
         const plansMap: Record<string, HabitPlan> = {};
         planResults.forEach(({ habitId, plan }) => { if (plan) plansMap[habitId] = plan; });
         setHabitPlans(plansMap);
+
+        // Start polling for first 3 habits that have no plan yet (plans may be generating in background)
+        const pending: Record<string, "pending"> = {};
+        habitsData.slice(0, 3).forEach((h) => {
+          if (!plansMap[h.id]) pending[h.id] = "pending";
+        });
+        if (Object.keys(pending).length > 0) setPlanPollingState(pending);
       }
     }
 
@@ -107,6 +117,45 @@ export default function DashboardClient() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Poll for habits whose plans are still generating
+  useEffect(() => {
+    const pendingIds = Object.keys(planPollingState).filter((id) => planPollingState[id] === "pending");
+    if (pendingIds.length === 0) return;
+
+    pendingIds.forEach((habitId) => {
+      if (pollingIntervals.current[habitId]) return; // already polling
+      let attempts = 0;
+      pollingIntervals.current[habitId] = setInterval(async () => {
+        attempts++;
+        if (attempts > 20) {
+          clearInterval(pollingIntervals.current[habitId]);
+          delete pollingIntervals.current[habitId];
+          setPlanPollingState((prev) => ({ ...prev, [habitId]: "timeout" }));
+          return;
+        }
+        try {
+          const plans: HabitPlan[] = await fetch(`/api/ai/plan/list?habitId=${habitId}`).then((r) => r.json());
+          if (plans[0]) {
+            setHabitPlans((prev) => ({ ...prev, [habitId]: plans[0] }));
+            setPlanPollingState((prev) => {
+              const next = { ...prev };
+              delete next[habitId];
+              return next;
+            });
+            clearInterval(pollingIntervals.current[habitId]);
+            delete pollingIntervals.current[habitId];
+          }
+        } catch {}
+      }, 3000);
+    });
+
+    return () => {
+      Object.values(pollingIntervals.current).forEach(clearInterval);
+      pollingIntervals.current = {};
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planPollingState]);
 
   const toggleHabit = async (habitId: string) => {
     const supabase = createClient();
@@ -207,13 +256,11 @@ export default function DashboardClient() {
     }
   };
 
-  const getTodayAction = (habitId: string) => {
-    const plan = habitPlans[habitId];
-    if (!plan?.daily_actions?.length) return null;
-    const dayN = Math.max(1, Math.min(28,
-      Math.floor((Date.now() - new Date(plan.created_at).getTime()) / 86400000) + 1
-    ));
-    return plan.daily_actions.find((a) => a.day === dayN) ?? null;
+  const getCurrentWeek = (plan: HabitPlan): WeekEntry | null => {
+    if (!plan.weekly_roadmap?.length) return null;
+    const dayN = Math.floor((Date.now() - new Date(plan.created_at).getTime()) / 86400000) + 1;
+    const weekIndex = Math.max(0, Math.min(Math.ceil(dayN / 7), 4) - 1);
+    return plan.weekly_roadmap[weekIndex] ?? null;
   };
 
   const streamPlan = async (url: string, body: Record<string, unknown>): Promise<Record<string, unknown>> => {
@@ -264,8 +311,11 @@ export default function DashboardClient() {
     if (!habit) return;
     setRegeneratingHabitId(habitId);
     try {
-      const plan = await streamPlan("/api/ai/plan/generate", { habitId, habitName: habit.name, acceptedAmount: habit.accepted_amount || "" });
-      await fetch("/api/ai/plan/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ habitId, plan }) });
+      await fetch("/api/ai/plan/generate-and-save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ habitId, habitName: habit.name }),
+      });
       await refreshPlanForHabit(habitId);
     } catch { /* ignore */ } finally {
       setRegeneratingHabitId(null);
@@ -440,9 +490,10 @@ export default function DashboardClient() {
           {habits.map((habit, index) => {
             const isCompleted = todayLogs[habit.id];
             const habitPlan = habitPlans[habit.id];
-            const hasMasterplan = (habit.weekly_roadmap?.length ?? 0) > 0 || !!habitPlan;
+            const pollingState = planPollingState[habit.id];
+            const hasMasterplan = (habit.weekly_roadmap?.length ?? 0) > 0 || !!habitPlan || !!pollingState;
             const isMasterplanOpen = expandedMasterplan === habit.id;
-            const todayAction = getTodayAction(habit.id);
+            const currentWeek = habitPlan ? getCurrentWeek(habitPlan) : null;
             const philosophy = habitPlan?.core_philosophy ?? habit.core_philosophy;
             const steps = habitPlan?.actionable_steps ?? habit.actionable_steps;
             const roadmap = habitPlan?.weekly_roadmap ?? habit.weekly_roadmap;
@@ -484,12 +535,35 @@ export default function DashboardClient() {
                         className="animate-fade-in"
                         style={{ padding: "16px", background: theme === "dark" ? "rgba(217,119,6,0.06)" : "rgba(217,119,6,0.03)", borderBottom: "1px solid var(--surface-border)", display: "flex", flexDirection: "column", gap: "16px" }}
                       >
-                        {/* Today's Daily Task */}
-                        {todayAction && (
+                        {/* Plan generating / timeout states */}
+                        {pollingState === "pending" && (
+                          <div style={{ padding: "12px 14px", background: "rgba(217,119,6,0.06)", borderRadius: "8px", border: "1px solid rgba(217,119,6,0.2)", display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div style={{ display: "flex", gap: "3px" }}>
+                              {[0, 1, 2].map((i) => (
+                                <div key={i} style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--accent)", animation: `pulse-soft 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                              ))}
+                            </div>
+                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)" }}>Generating your personalized plan...</p>
+                          </div>
+                        )}
+                        {pollingState === "timeout" && (
+                          <div style={{ padding: "12px 14px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)" }}>Plan generation timed out.</p>
+                            <button
+                              onClick={() => handleRegeneratePlan(habit.id)}
+                              disabled={regeneratingHabitId === habit.id}
+                              style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer", opacity: regeneratingHabitId === habit.id ? 0.6 : 1 }}
+                            >
+                              {regeneratingHabitId === habit.id ? "Generating..." : "Generate plan"}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* This week's focus */}
+                        {currentWeek && (
                           <div style={{ padding: "12px 14px", background: "var(--accent)", borderRadius: "8px" }}>
-                            <p style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)", marginBottom: "4px" }}>Day {todayAction.day} of 28</p>
-                            <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#fff", marginBottom: "4px" }}>{todayAction.action}</p>
-                            <p style={{ fontSize: "0.75rem", fontStyle: "italic", color: "rgba(255,255,255,0.85)" }}>{todayAction.tip}</p>
+                            <p style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)", marginBottom: "4px" }}>Week {currentWeek.week} of 4 — {currentWeek.focus}</p>
+                            <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#fff" }}>{currentWeek.target}</p>
                           </div>
                         )}
 

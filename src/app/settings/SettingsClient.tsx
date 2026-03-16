@@ -6,375 +6,192 @@ import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import type { Habit } from "@/lib/types";
 
+const ICONS = ["📖", "🤲", "🕌", "📿", "💰", "🎓", "💪", "🧘", "📝", "✨"];
+
+const sectionLabel: React.CSSProperties = {
+  fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.18em",
+  textTransform: "uppercase", color: "var(--accent)", marginBottom: "16px", display: "block",
+};
+const inputStyle: React.CSSProperties = {
+  height: "44px", padding: "0 14px", fontSize: "0.9rem", outline: "none",
+  background: "var(--background-secondary)", color: "var(--foreground)",
+  border: "1.5px solid var(--surface-border)", borderRadius: "8px", width: "100%",
+  boxSizing: "border-box",
+};
+
 export default function SettingsClient() {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
   const [newHabitName, setNewHabitName] = useState("");
-  const [newHabitIcon, setNewHabitIcon] = useState("✨");
+  const [newHabitIcon, setNewHabitIcon] = useState("📖");
   const [newHabitGoal, setNewHabitGoal] = useState("");
 
   const loadHabits = useCallback(async () => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.push("/");
-      return;
-    }
-
-    const { data } = await supabase
-      .from("habits")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true });
-
+    if (!user) { router.push("/"); return; }
+    const { data } = await supabase.from("habits").select("*").eq("user_id", user.id).order("created_at", { ascending: true });
     if (data) setHabits(data);
     setLoading(false);
   }, [router]);
 
-  useEffect(() => {
-    loadHabits();
-  }, [loadHabits]);
+  useEffect(() => { loadHabits(); }, [loadHabits]);
 
   const addHabit = async () => {
     if (!newHabitName.trim()) return;
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    const { data, error } = await supabase
-      .from("habits")
-      .insert({
-        user_id: user.id,
-        name: newHabitName.trim(),
-        icon: newHabitIcon,
-        accepted_amount: newHabitGoal.trim() || null,
-        is_active: true,
-      })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setHabits((prev) => [...prev, data]);
-      setNewHabitName("");
-      setNewHabitIcon("✨");
-      setNewHabitGoal("");
-    }
+    const { data, error } = await supabase.from("habits").insert({ user_id: user.id, name: newHabitName.trim(), icon: newHabitIcon, accepted_amount: newHabitGoal.trim() || null, is_active: true }).select().single();
+    if (!error && data) { setHabits((p) => [...p, data]); setNewHabitName(""); setNewHabitIcon("📖"); setNewHabitGoal(""); }
   };
 
   const toggleHabitActive = async (habitId: string, isActive: boolean) => {
     const supabase = createClient();
-    await supabase
-      .from("habits")
-      .update({ is_active: !isActive })
-      .eq("id", habitId);
-    setHabits((prev) =>
-      prev.map((h) => (h.id === habitId ? { ...h, is_active: !isActive } : h))
-    );
+    await supabase.from("habits").update({ is_active: !isActive }).eq("id", habitId);
+    setHabits((p) => p.map((h) => h.id === habitId ? { ...h, is_active: !isActive } : h));
   };
 
   const deleteHabit = async (habitId: string) => {
     const supabase = createClient();
     await supabase.from("habits").delete().eq("id", habitId);
-    setHabits((prev) => prev.filter((h) => h.id !== habitId));
+    setHabits((p) => p.filter((h) => h.id !== habitId));
   };
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await createClient().auth.signOut();
     router.push("/");
   };
 
   const handleResetAccount = async () => {
-    if (!confirm("Reset your account? This deletes all habits, logs, and streaks. You'll go through onboarding again.")) return;
+    if (!confirm("Reset account? Deletes all habits, logs, and streaks. You'll go through onboarding again.")) return;
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    await supabase.from("habit_logs").delete().eq("user_id", user.id);
-    await supabase.from("shawwal_fasts").delete().eq("user_id", user.id);
-    await supabase.from("streaks").delete().eq("user_id", user.id);
-    await supabase.from("habits").delete().eq("user_id", user.id);
-
+    await Promise.all([
+      supabase.from("habit_logs").delete().eq("user_id", user.id),
+      supabase.from("shawwal_fasts").delete().eq("user_id", user.id),
+      supabase.from("streaks").delete().eq("user_id", user.id),
+      supabase.from("habits").delete().eq("user_id", user.id),
+      supabase.from("halaqa_members").delete().eq("user_id", user.id),
+    ]);
     router.push("/onboarding");
   };
 
   if (loading) {
     return (
-      <main
-        className="min-h-dvh flex items-center justify-center"
-        style={{ background: "var(--background)" }}
-      >
-        <div className="text-center animate-pulse-soft">
-          <div className="text-3xl mb-3 animate-float">⚙️</div>
-          <p style={{ color: "var(--foreground-muted)" }}>Loading settings...</p>
-        </div>
+      <main style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--background)" }}>
+        <p style={{ color: "var(--foreground-muted)" }}>Loading settings...</p>
       </main>
     );
   }
 
   return (
-    <main className="relative min-h-dvh pb-8">
-      <div className="relative z-10 max-w-lg mx-auto px-5 pt-6 sm:pt-24">
+    <main style={{ minHeight: "100dvh", background: "var(--background)" }}>
+      <div style={{ maxWidth: "560px", margin: "0 auto", padding: "32px 24px 100px" }}>
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl">Settings</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--foreground-muted)" }}>
-            Manage your habits and preferences.
-          </p>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "40px" }}>
+          <button onClick={() => router.back()} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--foreground-muted)", padding: "8px 12px 8px 0", fontSize: "1.1rem" }}>←</button>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 300, fontSize: "1.8rem", flex: 1, textAlign: "center", color: "var(--foreground)" }}>Settings</h1>
+          <div style={{ width: "44px" }} />{/* spacer to center title */}
         </div>
 
         {/* Appearance */}
-        <section className="mb-8">
-          <h2
-            className="text-xs font-semibold uppercase tracking-widest mb-3"
-            style={{ color: "var(--foreground-muted)" }}
-          >
-            Appearance
-          </h2>
-
-          {/* Visual pill toggle */}
-          <div
-            className="glass p-4 flex items-center justify-between"
-            style={{ borderRadius: "var(--radius-lg)" }}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-xl">{theme === "dark" ? "🌙" : "☀️"}</span>
-              <span className="font-medium">
-                {theme === "dark" ? "Dark Mode" : "Light Mode"}
-              </span>
-            </div>
+        <section style={{ marginBottom: "40px" }}>
+          <span style={sectionLabel}>Appearance</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
+            <span style={{ fontWeight: 500, fontSize: "1rem" }}>Dark Mode</span>
             <button
               onClick={toggleTheme}
-              className="relative h-7 w-12 rounded-full transition-all duration-300 cursor-pointer"
-              style={{
-                background:
-                  theme === "dark" ? "var(--accent)" : "var(--surface-border)",
-              }}
-              aria-label="Toggle theme"
+              aria-label="Toggle dark mode"
+              style={{ position: "relative", width: "48px", height: "28px", borderRadius: "999px", background: theme === "dark" ? "var(--accent)" : "var(--surface-border)", border: "none", cursor: "pointer", transition: "background 0.3s" }}
             >
-              <span
-                className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-all duration-300"
-                style={{
-                  left: theme === "dark" ? "calc(100% - 26px)" : "2px",
-                }}
-              />
+              <span style={{ position: "absolute", top: "3px", width: "22px", height: "22px", borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transition: "left 0.3s", left: theme === "dark" ? "calc(100% - 25px)" : "3px" }} />
             </button>
           </div>
         </section>
 
         {/* Your Habits */}
-        <section className="mb-8">
-          <h2
-            className="text-xs font-semibold uppercase tracking-widest mb-3"
-            style={{ color: "var(--foreground-muted)" }}
-          >
-            Your Habits
-          </h2>
+        <section style={{ marginBottom: "40px" }}>
+          <span style={sectionLabel}>Your Habits</span>
 
-          <div className="space-y-2 mb-4">
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "28px" }}>
             {habits.map((habit) => (
-              <div
-                key={habit.id}
-                className="glass p-4 flex items-center gap-3 transition-opacity"
-                style={{
-                  borderRadius: "var(--radius-md)",
-                  opacity: habit.is_active ? 1 : 0.5,
-                }}
-              >
-                <span className="text-xl">{habit.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{habit.name}</p>
-                  <p
-                    className="text-xs truncate"
-                    style={{ color: "var(--foreground-muted)" }}
-                  >
-                    {habit.accepted_amount || habit.suggested_amount || "No goal set"}
-                  </p>
+              <div key={habit.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 0", borderBottom: "1px solid var(--surface-border)", opacity: habit.is_active ? 1 : 0.5 }}>
+                <span style={{ fontSize: "1.25rem", width: "32px", textAlign: "center" }}>{habit.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "2px" }}>{habit.name}</p>
+                  <p style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>Goal: {habit.accepted_amount || habit.suggested_amount || "—"}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => toggleHabitActive(habit.id, habit.is_active)}
-                    className="text-xs px-2.5 py-1 rounded-full cursor-pointer transition-all font-medium"
-                    style={{
-                      background: habit.is_active
-                        ? "rgba(34, 197, 94, 0.15)"
-                        : "var(--surface-border)",
-                      color: habit.is_active ? "var(--success)" : "var(--foreground-muted)",
-                      border: habit.is_active
-                        ? "1px solid rgba(34, 197, 94, 0.3)"
-                        : "1px solid transparent",
-                    }}
-                  >
-                    {habit.is_active ? "Active" : "Paused"}
-                  </button>
-                  <button
-                    onClick={() => deleteHabit(habit.id)}
-                    className="text-xs w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all"
-                    style={{
-                      background: "rgba(239, 68, 68, 0.08)",
-                      color: "#EF4444",
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
+                <button
+                  onClick={() => toggleHabitActive(habit.id, habit.is_active)}
+                  style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "999px", cursor: "pointer", border: `1px solid ${habit.is_active ? "rgba(34,197,94,0.4)" : "var(--surface-border)"}`, background: habit.is_active ? "rgba(34,197,94,0.08)" : "transparent", color: habit.is_active ? "var(--success)" : "var(--foreground-muted)" }}
+                >
+                  {habit.is_active ? "ACTIVE" : "PAUSED"}
+                </button>
+                <button onClick={() => deleteHabit(habit.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#EF4444", fontSize: "1rem", padding: "4px", lineHeight: 1 }}>✕</button>
               </div>
             ))}
+            {habits.length === 0 && <p style={{ color: "var(--foreground-muted)", fontSize: "0.9rem" }}>No habits yet.</p>}
           </div>
 
           {/* Add new habit */}
-          <div className="glass p-4" style={{ borderRadius: "var(--radius-md)" }}>
-            <p className="text-sm font-medium mb-3">Add New Habit</p>
-            <div className="flex gap-2 mb-2">
-              <select
-                value={newHabitIcon}
-                onChange={(e) => setNewHabitIcon(e.target.value)}
-                className="w-12 h-10 text-center rounded-lg border-none cursor-pointer text-lg"
-                style={{
-                  background: "var(--background-secondary)",
-                  color: "var(--foreground)",
-                }}
-              >
-                {["✨", "📖", "🤲", "🕌", "📿", "💰", "🎓", "💪", "🧘", "📝"].map(
-                  (emoji) => (
-                    <option key={emoji} value={emoji}>
-                      {emoji}
-                    </option>
-                  )
-                )}
-              </select>
-              <input
-                type="text"
-                value={newHabitName}
-                onChange={(e) => setNewHabitName(e.target.value)}
-                placeholder="Habit name"
-                className="flex-1 h-10 px-3 rounded-lg border-none text-sm outline-none"
-                style={{
-                  background: "var(--background-secondary)",
-                  color: "var(--foreground)",
-                }}
-              />
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newHabitGoal}
-                onChange={(e) => setNewHabitGoal(e.target.value)}
-                placeholder="Goal (e.g., 2 pages daily)"
-                className="flex-1 h-10 px-3 rounded-lg border-none text-sm outline-none"
-                style={{
-                  background: "var(--background-secondary)",
-                  color: "var(--foreground)",
-                }}
-              />
-              <button
-                onClick={addHabit}
-                className="btn btn-primary h-10 px-4 text-sm"
-                disabled={!newHabitName.trim()}
-              >
-                Add
-              </button>
-            </div>
+          <span style={sectionLabel}>Add New Habit</span>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+            <select
+              value={newHabitIcon}
+              onChange={(e) => setNewHabitIcon(e.target.value)}
+              style={{ ...inputStyle, width: "72px", flex: "none", cursor: "pointer", fontSize: "1.1rem", textAlign: "center" }}
+            >
+              {ICONS.map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+            <input
+              type="text"
+              value={newHabitName}
+              onChange={(e) => setNewHabitName(e.target.value)}
+              placeholder="e.g. Surah Mulk"
+              style={{ ...inputStyle, flex: 1 }}
+            />
           </div>
+          <input
+            type="text"
+            value={newHabitGoal}
+            onChange={(e) => setNewHabitGoal(e.target.value)}
+            placeholder="e.g. Daily at 10 PM"
+            style={{ ...inputStyle, marginBottom: "14px" }}
+          />
+          <button
+            onClick={addHabit}
+            disabled={!newHabitName.trim()}
+            style={{ width: "100%", height: "48px", background: "var(--accent)", color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: !newHabitName.trim() ? "not-allowed" : "pointer", opacity: !newHabitName.trim() ? 0.45 : 1 }}
+          >
+            ADD HABIT
+          </button>
         </section>
 
         {/* Account */}
-        <section className="mb-10">
-          <h2
-            className="text-xs font-semibold uppercase tracking-widest mb-3"
-            style={{ color: "var(--foreground-muted)" }}
-          >
-            Account
-          </h2>
+        <section style={{ marginBottom: "40px" }}>
+          <span style={sectionLabel}>Account</span>
           <button
             onClick={handleSignOut}
-            className="glass glass-hover w-full p-4 flex items-center gap-3 cursor-pointer transition-all mb-3"
-            style={{
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid rgba(239, 68, 68, 0.2)",
-              color: "#EF4444",
-            }}
+            style={{ width: "100%", display: "flex", alignItems: "center", gap: "14px", padding: "16px", background: "var(--surface)", border: "1.5px solid var(--surface-border)", borderRadius: "10px", cursor: "pointer", marginBottom: "12px", color: "var(--foreground)" }}
           >
-            <span
-              className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
-              style={{ background: "rgba(239, 68, 68, 0.1)" }}
-            >
-              👋
-            </span>
-            <span className="font-medium">Sign Out</span>
+            <span style={{ fontSize: "1.1rem" }}>👋</span>
+            <span style={{ fontWeight: 500 }}>Sign Out</span>
           </button>
-
-          <button
-            onClick={async () => {
-              if (!confirm("DEV MODE: Are you sure you want to nuke your DB rows? This will delete all your habits, streaks, and circles so you can test Onboarding again.")) return;
-              const supabase = createClient();
-              const { data: { user } } = await supabase.auth.getUser();
-              if (!user) return;
-              
-              await Promise.all([
-                supabase.from("habits").delete().eq("user_id", user.id),
-                supabase.from("streaks").delete().eq("user_id", user.id),
-                supabase.from("halaqa_members").delete().eq("user_id", user.id)
-              ]);
-              
-              router.push("/onboarding");
-            }}
-            className="glass w-full p-4 flex items-center gap-3 cursor-pointer transition-all"
-            style={{
-              borderRadius: "var(--radius-lg)",
-              border: "1px dashed rgba(245, 158, 11, 0.4)",
-              color: "#F59E0B",
-              background: "rgba(245, 158, 11, 0.05)",
-            }}
-          >
-            <span
-              className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
-              style={{ background: "rgba(245, 158, 11, 0.1)" }}
-            >
-              ⚠️
-            </span>
-            <span className="font-medium">Reset Account (Dev Mode)</span>
-          </button>
-        </section>
-
-        {/* Dev Tools */}
-        <section className="mb-10">
-          <h2
-            className="text-xs font-semibold uppercase tracking-widest mb-3"
-            style={{ color: "var(--foreground-muted)" }}
-          >
-            Dev Tools
-          </h2>
           <button
             onClick={handleResetAccount}
-            className="glass glass-hover w-full p-4 flex items-center gap-3 cursor-pointer transition-all"
-            style={{
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid rgba(239, 68, 68, 0.2)",
-              color: "#EF4444",
-            }}
+            style={{ width: "100%", display: "flex", alignItems: "center", gap: "14px", padding: "16px", background: "rgba(245,158,11,0.06)", border: "1.5px dashed rgba(245,158,11,0.4)", borderRadius: "10px", cursor: "pointer", color: "#F59E0B" }}
           >
-            <span
-              className="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0"
-              style={{ background: "rgba(239, 68, 68, 0.1)" }}
-            >
-              🔄
-            </span>
-            <span className="font-medium">Reset Account</span>
+            <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+            <span style={{ fontWeight: 500 }}>Reset Account (Dev)</span>
           </button>
         </section>
 
-        {/* Footer */}
-        <div
-          className="text-center text-xs space-y-1"
-          style={{ color: "var(--foreground-muted)", opacity: 0.55 }}
-        >
-          <p>Built with ❤️ for the Ummah</p>
-          <p>Legacy v1.0.0</p>
-        </div>
+        <p style={{ textAlign: "center", fontSize: "0.72rem", color: "var(--foreground-muted)", opacity: 0.5 }}>Legacy v1.0.0 · Built for the Ummah</p>
       </div>
     </main>
   );
