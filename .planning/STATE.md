@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 02-03-PLAN.md (save and list Node routes)
-last_updated: "2026-03-16T05:33:43.210Z"
-last_activity: 2026-03-16 — Completed Plan 01-02 (CircleDetailClient)
+status: testing
+stopped_at: Phase 2 complete + onboarding redesigned (6-step flow). User about to test.
+last_updated: "2026-03-16T12:00:00.000Z"
+last_activity: 2026-03-16 — Redesigned onboarding to 6-step flow, wired AI plan routes to dashboard
 progress:
   total_phases: 7
   completed_phases: 2
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ## Current Position
 
-Phase: 1 of 5 (Circles UI) — COMPLETE ✓
-Plan: 2 of 2 complete
-Status: Awaiting human verification, then move to Phase 2
-Last activity: 2026-03-16 — Completed Plan 01-02 (CircleDetailClient)
+Phase: 2 of 7 (AI + Web Flow) — COMPLETE ✓ (verified 17/17)
+Phase: 3 next (Polish — streak sharing, join page redesign)
+Status: USER TESTING Phase 2 deliverables right now. Resume after test feedback.
+Last activity: 2026-03-16 — Onboarding redesigned to 6-step flow + dashboard AI plan wired
 
 Progress: [██░░░░░░░░] 20%
 
@@ -80,8 +80,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- **AI fixes (Phase 2)**: Backend agent asked for specifics on what's broken/incomplete with AI. Must clarify before Phase 2 planning — is it the masterplan endpoint, the onboarding suggest endpoint, or the dashboard display?
-- Push notifications: `device_tokens` schema and RPCs are ready on backend. Remaining: `src/lib/push.ts`, `/api/push/register`, cron routes, FIREBASE env vars (backend work before frontend opt-in UI).
+- **Supabase migrations**: 3 migrations need to be applied manually — `20260315_phase3_backend.sql`, `20260315_phase3_mobile.sql`, `20260316_habit_plans.sql`. habit_plans was applied this session (user confirmed). Other two may not be applied yet.
+- Push notifications: `device_tokens` schema and RPCs are ready. Remaining: `src/lib/push.ts`, `/api/push/register`, cron routes, FIREBASE env vars.
 - RLS on `halaqa_members`: recursive dependency resolved via sessionStorage pendingHalaqa pattern — already handled in Phase 1.
 
 ## Session Continuity
