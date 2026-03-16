@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 02-01-PLAN.md (habit_plans migration + DailyAction/HabitPlan types)
-last_updated: "2026-03-16T05:23:59.483Z"
+stopped_at: Completed 02-02-PLAN.md (generate + refine streaming Edge routes)
+last_updated: "2026-03-16T05:27:44.984Z"
 last_activity: 2026-03-16 — Completed Plan 01-02 (CircleDetailClient)
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 20
 ---
 
@@ -52,6 +52,7 @@ Progress: [██░░░░░░░░] 20%
 *Updated after each plan completion*
 | Phase 01-circles-ui P01 | 6min | 2 tasks | 2 files |
 | Phase 02-ai-web-flow-fixes P01 | 4min | 2 tasks | 2 files |
+| Phase 02-ai-web-flow-fixes P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - [Phase 01-circles-ui]: Removed hasLoggedToday gate from HalaqaClient — gate moves to detail page (plan 01-02)
 - [Phase 01-circles-ui]: AvatarStack as module-level component — avoids React reconciliation issues with inline definitions
 - [Phase 02-ai-web-flow-fixes]: Append-only habit_plans versioning with is_active flag — full plan history preserved, SECURITY DEFINER RPC for atomic save
+- [Phase 02-ai-web-flow-fixes]: No responseMimeType application/json on Gemini — breaks streaming; format enforced via prompt only
+- [Phase 02-ai-web-flow-fixes]: Generate + refine routes stream-only; frontend calls /save after user approves plan
 
 ### Pending Todos
 
@@ -80,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T05:23:59.481Z
-Stopped at: Completed 02-01-PLAN.md (habit_plans migration + DailyAction/HabitPlan types)
+Last session: 2026-03-16T05:27:44.982Z
+Stopped at: Completed 02-02-PLAN.md (generate + refine streaming Edge routes)
 Resume file: None
