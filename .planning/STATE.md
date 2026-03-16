@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Completed 01-circles-ui-01-PLAN.md
-last_updated: "2026-03-16T04:38:26.230Z"
-last_activity: 2026-03-15 — Roadmap created, 15 requirements mapped across 5 phases
+status: in_progress
+stopped_at: Completed 01-circles-ui-02-PLAN.md — Phase 1 complete, ready for human verification
+last_updated: "2026-03-16"
+last_activity: 2026-03-16 — Completed Plan 01-02 (CircleDetailClient), Phase 1 Circles UI done
 progress:
   total_phases: 7
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 0
+  completed_plans: 2
+  percent: 20
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ## Current Position
 
-Phase: 1 of 5 (Circles UI)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-15 — Roadmap created, 15 requirements mapped across 5 phases
+Phase: 1 of 5 (Circles UI) — COMPLETE ✓
+Plan: 2 of 2 complete
+Status: Awaiting human verification, then move to Phase 2
+Last activity: 2026-03-16 — Completed Plan 01-02 (CircleDetailClient)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -72,11 +72,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- RLS on `halaqa_members` has recursive dependency through `halaqas` — circle detail page must not re-fetch the newly created circle immediately; read from passed state or wait for propagation.
-- Push notifications require VAPID keys and a server-side push endpoint — check if these are already provisioned before Phase 2 planning.
+- **AI fixes (Phase 2)**: Backend agent asked for specifics on what's broken/incomplete with AI. Must clarify before Phase 2 planning — is it the masterplan endpoint, the onboarding suggest endpoint, or the dashboard display?
+- Push notifications: `device_tokens` schema and RPCs are ready on backend. Remaining: `src/lib/push.ts`, `/api/push/register`, cron routes, FIREBASE env vars (backend work before frontend opt-in UI).
+- RLS on `halaqa_members`: recursive dependency resolved via sessionStorage pendingHalaqa pattern — already handled in Phase 1.
 
 ## Session Continuity
 
-Last session: 2026-03-16T04:38:26.228Z
-Stopped at: Completed 01-circles-ui-01-PLAN.md
+Last session: 2026-03-16
+Stopped at: Phase 1 complete — both plans done. Awaiting human verification before Phase 2.
 Resume file: None

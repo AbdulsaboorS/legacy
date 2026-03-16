@@ -8,6 +8,18 @@ Active requirements for the Eid al-Fitr 2026 launch (March 20-21). Validated fea
 
 ## Categories
 
+### AI — Personalized Habit Plans
+
+**AI-01**: For each habit, the AI generates a comprehensive 28-day action plan with: a core philosophy, 3 actionable steps, a 4-week roadmap, and 28 daily specific tasks (one per day, each with an action and a motivational tip).
+
+**AI-02**: Users can submit a plain-language refinement request ("make it less intense", "add more Sunnah context") and receive a streamed revised plan. They approve the revision before it is saved.
+
+**AI-03**: The active plan per habit is visible in the dashboard — showing the overall plan and today's specific daily action based on days elapsed since the plan was created.
+
+**AI-04**: Users can regenerate a fresh plan for any habit at any time. Previous plans are archived (not deleted) and viewable as plan history.
+
+**AI-05**: All plan generation and refinement endpoints require authentication. Unauthenticated requests return 401 before any Gemini call is made.
+
 ### CIRCLE — Accountability Circle Features
 
 **CIRCLE-01**: User can view a dedicated circle detail page at `/halaqa/[id]` showing member board, individual member stats, and today's completion status for each member.
@@ -70,11 +82,16 @@ Active requirements for the Eid al-Fitr 2026 launch (March 20-21). Validated fea
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CIRCLE-01 | Phase 1 | Pending |
-| CIRCLE-02 | Phase 1 | Pending |
+| AI-01 | Phase 2 | Pending |
+| AI-02 | Phase 2 | Pending |
+| AI-03 | Phase 2 | Pending |
+| AI-04 | Phase 2 | Pending |
+| AI-05 | Phase 2 | Complete (done in Phase 1 backend) |
+| CIRCLE-01 | Phase 1 | Complete |
+| CIRCLE-02 | Phase 1 | Complete |
 | CIRCLE-03 | Phase 1 | Complete |
-| NOTIF-01 | Phase 2 | Pending |
-| NOTIF-02 | Phase 2 | Pending |
+| NOTIF-01 | Phase 4 | Pending |
+| NOTIF-02 | Phase 4 | Pending |
 | SHARE-01 | Phase 3 | Pending |
 | SHARE-02 | Phase 3 | Pending |
 | JOIN-01 | Phase 3 | Pending |

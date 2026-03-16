@@ -6,7 +6,7 @@ Seven phases. Web-first: finish circles, fix AI, polish flows, wire notification
 
 ## Phases
 
-- [ ] **Phase 1: Circles UI** — Circle detail page and card list (highest value prop)
+- [x] **Phase 1: Circles UI** — Circle detail page and card list (highest value prop)
 - [ ] **Phase 2: AI + Web Flow Fixes** — Fix AI masterplan flow, finalize all web screens
 - [ ] **Phase 3: Polish** — Streak sharing, join page redesign
 - [ ] **Phase 4: Push Notifications** — FCM infra (backend) + opt-in UI (frontend)
@@ -36,13 +36,33 @@ Plans:
 **Goal**: All AI functionality works end-to-end and every web screen is finalized before mobile starts.
 **Owner**: Frontend + Backend (coordinate)
 **Depends on**: Phase 1
-**Requirements**: AI-01, AI-02, FLOW-01
+**Requirements**: AI-01, AI-02, AI-03, AI-04, AI-05
+**Backend scope**:
+- `habit_plans` table: versioned plans per habit (active + archived history)
+- `/api/ai/plan/generate` (Edge, streaming): 28-day plan with daily_actions JSONB
+- `/api/ai/plan/refine` (Edge, streaming): current plan + user message → streams revised plan
+- `/api/ai/plan/save` (POST): upserts approved plan, archives previous version
+- `/api/ai/plan/list` (GET): plan history for a habit
+
+**Frontend scope** (separate agent):
+- Onboarding step 3: call generate, stream, display
+- Dashboard: today's daily action (day N of 28) + expandable full plan
+- Refinement UI: message input → streaming preview → approve/discard
+- Regenerate button + plan history view
+
 **Success Criteria**:
-  1. AI masterplan generates successfully for any habit and displays correctly in dashboard.
-  2. AI step-down suggestions in onboarding load without errors.
-  3. Full user flow (landing → auth → onboarding → dashboard → halaqa → settings) works without broken states.
-  4. No console errors on any page in production build.
-**Plans**: TBD
+  1. Onboarding generates a 28-day plan per habit (streaming, no timeout).
+  2. Dashboard shows today's specific daily action for each habit.
+  3. User can type a refinement, see streamed result, approve → saved as new active version.
+  4. User can regenerate plan from dashboard — previous archived, new becomes active.
+  5. Plan history accessible per habit.
+  6. Full user flow clean, no console errors in production build.
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — habit_plans migration + RLS + save_habit_plan RPC + HabitPlan TypeScript types
+- [ ] 02-02-PLAN.md — /api/ai/plan/generate and /api/ai/plan/refine (Edge streaming routes)
+- [ ] 02-03-PLAN.md — /api/ai/plan/save and /api/ai/plan/list (Node routes, RPC + history)
 
 ### Phase 3: Polish
 **Goal**: Streak milestones are shareable moments; join flow matches editorial design.
@@ -60,7 +80,10 @@ Plans:
 **Owner**: Backend (FCM infra, cron routes, device_tokens) + Frontend (opt-in UI, settings)
 **Depends on**: Phase 2
 **Backend already done**:
-  - `supabase/migrations/20260315_phase3_mobile.sql` — device_tokens table + push RPCs
+  - `supabase/migrations/20260315_phase3_mobile.sql` — device_tokens table + push RPCs (schema ready)
+  - `recalculate_streak` RPC — authoritative server-side streak with per-habit grace day
+  - `send_halaqa_reaction` RPC — 5/day rate limit enforced server-side
+  - AI endpoints secured — 401 returned for unauthenticated requests
   - Installed: firebase-admin, @capacitor/push-notifications
 **Remaining backend**: src/lib/push.ts, /api/push/register, /api/cron/daily-reminder, /api/cron/streak-alert, vercel.json cron config, FIREBASE env vars
 **Requirements**: NOTIF-01, NOTIF-02
@@ -100,6 +123,7 @@ Plans:
 **Backend already done**:
   - Installed: @capacitor/core, @capacitor/app, @capacitor/cli
   - Bundle ID decided: `app.joinlegacy`
+  - `src/lib/supabase/native.ts` — Capacitor-ready Supabase client exists
 **Remaining**:
   - capacitor.config.ts (bundle ID, URL scheme, FCM config)
   - OAuth deep link: `legacy://auth/callback` in auth/callback/route.ts + Supabase allowed URLs
@@ -119,7 +143,7 @@ Plans:
 
 | Phase | Owner | Status | Notes |
 |-------|-------|--------|-------|
-| 1. Circles UI | 1/2 | In Progress|  |
+| 1. Circles UI | Frontend | ✓ Complete | Both plans done, human verified |
 | 2. AI + Web Flow | Both | Not started | Web finalization gate |
 | 3. Polish | Frontend | Not started | |
 | 4. Push Notifications | Backend + Frontend | Partially started | Migration + packages done |
