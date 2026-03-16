@@ -134,6 +134,13 @@ export default function HalaqaClient() {
       .select("halaqa_id")
       .eq("user_id", user.id);
 
+    // Check for a freshly-created circle not yet visible via RLS
+    let pendingHalaqa: Halaqa | null = null;
+    try {
+      const raw = sessionStorage.getItem("pendingHalaqa");
+      if (raw) pendingHalaqa = JSON.parse(raw) as Halaqa;
+    } catch { /* ignore */ }
+
     if (membershipData && membershipData.length > 0) {
       const ids = membershipData.map((m) => m.halaqa_id);
       const { data: halaqasData } = await supabase
@@ -141,9 +148,15 @@ export default function HalaqaClient() {
         .select("*")
         .in("id", ids);
 
-      if (halaqasData) {
-        setMyHalaqas(halaqasData);
+      const list = halaqasData ?? [];
+      // Merge in pending if not yet in DB result
+      if (pendingHalaqa && !list.find((h) => h.id === pendingHalaqa!.id)) {
+        list.push(pendingHalaqa);
       }
+      setMyHalaqas(list);
+    } else if (pendingHalaqa) {
+      // DB hasn't propagated yet — show the pending circle optimistically
+      setMyHalaqas([pendingHalaqa]);
     } else {
       setActiveTab("lobby");
     }
