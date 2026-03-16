@@ -119,7 +119,7 @@ Plans:
 
 | Phase | Owner | Status | Notes |
 |-------|-------|--------|-------|
-| 1. Circles UI | Frontend | Not started | Highest priority |
+| 1. Circles UI | 1/2 | In Progress|  |
 | 2. AI + Web Flow | Both | Not started | Web finalization gate |
 | 3. Polish | Frontend | Not started | |
 | 4. Push Notifications | Backend + Frontend | Partially started | Migration + packages done |
