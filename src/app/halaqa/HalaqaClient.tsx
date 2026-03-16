@@ -296,6 +296,9 @@ export default function HalaqaClient() {
         prev.find((h) => h.id === newHalaqaId) ? prev : [...prev, newHalaqa]
       );
       activeHalaqaInitialized.current = true;
+      // Pass halaqa via sessionStorage — RLS recursive dependency prevents
+      // reading the newly created row from DB immediately after creation
+      sessionStorage.setItem("pendingHalaqa", JSON.stringify(newHalaqa));
       router.push(`/halaqa/${newHalaqaId}`);
     } catch (error) {
       console.error("Failed to create circle:", error);

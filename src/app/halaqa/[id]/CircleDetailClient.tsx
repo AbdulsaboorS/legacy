@@ -100,16 +100,34 @@ export default function CircleDetailClient() {
     }
 
     // 1. Load halaqa metadata
+    // Check sessionStorage for a freshly-created halaqa — RLS recursive
+    // dependency prevents reading the row from DB immediately after creation
+    let pendingHalaqa: Halaqa | null = null;
+    try {
+      const raw = sessionStorage.getItem("pendingHalaqa");
+      if (raw) {
+        const parsed = JSON.parse(raw) as Halaqa;
+        if (parsed.id === halaqaId) {
+          pendingHalaqa = parsed;
+          sessionStorage.removeItem("pendingHalaqa");
+        }
+      }
+    } catch {
+      // ignore sessionStorage errors
+    }
+
     const { data: halaqaData } = await supabase
       .from("halaqas")
       .select("*")
       .eq("id", halaqaId)
       .single();
-    if (!halaqaData) {
+
+    const resolvedHalaqa = halaqaData ?? pendingHalaqa;
+    if (!resolvedHalaqa) {
       router.push("/halaqa");
       return;
     }
-    setHalaqa(halaqaData);
+    setHalaqa(resolvedHalaqa);
 
     // 2. Check if current user logged habits today
     const { count: logCount } = await supabase
