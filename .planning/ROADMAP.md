@@ -144,7 +144,7 @@ Plans:
 | Phase | Owner | Status | Notes |
 |-------|-------|--------|-------|
 | 1. Circles UI | Frontend | ✓ Complete | Both plans done, human verified |
-| 2. AI + Web Flow | Both | Not started | Web finalization gate |
+| 2. AI + Web Flow | 1/3 | In Progress|  |
 | 3. Polish | Frontend | Not started | |
 | 4. Push Notifications | Backend + Frontend | Partially started | Migration + packages done |
 | 5. PWA Hardening | Frontend | Not started | |
