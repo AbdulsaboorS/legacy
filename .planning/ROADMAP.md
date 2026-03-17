@@ -2,16 +2,17 @@
 
 ## Overview
 
-Six phases. Web-first: fix AI plan generation, polish web flows, then wrap for mobile. Push notifications and launch polish come last.
+Seven phases. Web-first: fix AI plan generation, build the live circle feed, polish web flows, then wrap for mobile. Push notifications and launch polish come last.
 
 ## Phases
 
 - [x] **Phase 1: Circles UI** — Circle detail page and card list (highest value prop)
 - [x] **Phase 2: AI + Web Flow Fixes** — Fix AI masterplan flow, finalize all web screens (completed 2026-03-16)
 - [x] **Phase 3: AI Plan Generation** — Fix plan generation end-to-end so it actually works (completed 2026-03-17)
-- [ ] **Phase 4: Web App Flow Polish** — UX polish, tab performance, streak sharing, join page, PWA basics
-- [ ] **Phase 5: Mobile App** — Capacitor wrap, App Store, Google Play, OAuth deep links
-- [ ] **Phase 6: Push Notifications + Launch** — FCM, cron jobs, OG/SEO, analytics, error monitoring
+- [ ] **Phase 4: Live Circle Feed** — Real-time activity feed on circle detail, reactions on feed items, notification dots
+- [ ] **Phase 5: Web App Flow Polish** — UX polish, tab performance, streak sharing, join page, PWA basics
+- [ ] **Phase 6: Mobile App** — Capacitor wrap, App Store, Google Play, OAuth deep links
+- [ ] **Phase 7: Push Notifications + Launch** — FCM, cron jobs, OG/SEO, analytics, error monitoring
 
 ## Phase Details
 
@@ -54,17 +55,46 @@ Plans:
 - [x] 03-01-PLAN.md — New streaming generate-stream route + fix refine prompt
 - [x] 03-02-PLAN.md — Dashboard rework: streaming generation, empty state, error state, regenerate confirm
 
-### Phase 4: Web App Flow Polish
-**Goal**: Every web screen is complete and feels production-ready. Tab navigation is fast. Streak sharing and join page are finalized.
+### Phase 4: Live Circle Feed
+**Goal**: A real-time activity feed on `/halaqa/[id]` makes circles feel alive — users open the app and feel the pulse of their community practicing alongside them.
 **Owner**: Full-stack
 **Depends on**: Phase 3
+**Key decisions**:
+  - 30s polling on tab focus (visibilitychange) — no Supabase realtime subscriptions
+  - Feed window: rolling 48 hours (covers late-night opener seeing yesterday's energy)
+  - Today/Yesterday dividers anchored to Fajr time
+  - Reactions move from member board → feed items (react to a specific check-in event)
+  - Notification dot on circle cards: localStorage tracks last-opened timestamp per circle
+  - No missed days / streak breaks in feed — mercy-first ethos
+**Backend blockers (migration required before frontend)**:
+  1. SECURITY DEFINER RPC `get_circle_feed(halaqa_id)` — returns merged, time-sorted feed of habit_log completions + streak milestones + new member joins for 48hr window (bypasses RLS so members can read each other's logs)
+  2. `habit_log_id` FK added to `halaqa_reactions` — attach reactions to specific check-in events
+  3. Streak milestone detection — frontend derives from current_streak (7/14/21/28/30) if last_completed_date is today
+**Success Criteria**:
+  1. User opens circle detail and sees a live feed of what their circle did in the last 48 hours
+  2. Checking in causes your own activity to appear in the feed within 30 seconds
+  3. Streak milestones surface as distinct celebratory items
+  4. Reacting to a feed item shows aggregate counts visible to the whole circle
+  5. Circle cards in My Circles show a dot when there's unseen activity
+  6. Empty state never feels dead — always shows a quote or yesterday's activity
+  7. No layout overflow on mobile, consistent with existing design system
+**Plans**: 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Migration: habit_log_id FK + get_circle_feed SECURITY DEFINER RPC + FeedRow types
+- [ ] 04-02-PLAN.md — CircleFeed component + wire into CircleDetailClient + notification dots in HalaqaClient
+
+### Phase 5: Web App Flow Polish
+**Goal**: Every web screen is complete and feels production-ready. Tab navigation is fast. Streak sharing and join page are finalized.
+**Owner**: Full-stack
+**Depends on**: Phase 4
 **Success Criteria**: TBD
 **Plans**: TBD
 
-### Phase 5: Mobile App
+### Phase 6: Mobile App
 **Goal**: Legacy ships on iOS App Store and Google Play via Capacitor + Codemagic CI.
 **Owner**: Full-stack
-**Depends on**: Phase 4
+**Depends on**: Phase 5
 **Already done**:
   - @capacitor/core, @capacitor/app, @capacitor/cli installed
   - Bundle ID: `app.joinlegacy`
@@ -73,10 +103,10 @@ Plans:
 **Success Criteria**: TBD
 **Plans**: TBD
 
-### Phase 6: Push Notifications + Launch
+### Phase 7: Push Notifications + Launch
 **Goal**: Users get daily reminders and streak alerts. App is launch-ready with correct metadata, analytics, and error monitoring.
 **Owner**: Full-stack
-**Depends on**: Phase 5
+**Depends on**: Phase 6
 **Already done**:
   - device_tokens schema + push RPCs (migration applied)
   - recalculate_streak + send_halaqa_reaction RPCs applied
@@ -87,13 +117,13 @@ Plans:
 
 ## Progress
 
-**Execution order**: 1 → 2 → 3 → 4 → 5 → 6
+**Execution order**: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Status | Notes |
 |-------|--------|-------|
 | 1. Circles UI | ✓ Complete | Both plans done, human verified |
 | 2. AI + Web Flow | ✓ Complete | 2026-03-16 |
 | 3. AI Plan Generation | ✓ Complete | 2026-03-17 |
-| 4. Web App Flow Polish | Not started | |
-| 5. Mobile App | Not started | Packages + bundle ID done |
-| 6. Push Notifications + Launch | Not started | Migrations + packages done |
+| 4. Live Circle Feed | 1/2 | In Progress|  | 5. Web App Flow Polish | Not started | |
+| 6. Mobile App | Not started | Packages + bundle ID done |
+| 7. Push Notifications + Launch | Not started | Migrations + packages done |

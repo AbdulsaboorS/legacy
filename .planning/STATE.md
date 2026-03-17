@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready
-stopped_at: Completed Phase 3 (03-ai-plan-generation) — all 2 plans done, human verified
-last_updated: "2026-03-17T02:10:00.000Z"
+status: verifying
+stopped_at: Completed 04-live-circle-feed-04-01-PLAN.md
+last_updated: "2026-03-17T23:10:14.427Z"
 last_activity: 2026-03-17 — Streaming generation UX, no-polling dashboard, Gemini model fix
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 9
+  completed_plans: 8
   percent: 20
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** A Muslim opens Legacy daily, logs habits, sees their circle doing the same, and feels Ramadan's momentum carried forward.
-**Current focus:** Phase 1 — Circles UI
+**Current focus:** Phase 4 — Live Circle Feed
 
 ## Current Position
 
 Phase: 3 of 7 (AI Plan Generation) — COMPLETE ✓
-Phase: 4 next (Web App Flow Polish — UX polish, streak sharing, join page)
+Phase: 4 next (Live Circle Feed — real-time activity feed, reactions on feed items, notification dots)
 Status: Phase 3 verified ✓. Next session: plan and execute Phase 4.
 Last activity: 2026-03-17 — Streaming generation UX, no-polling dashboard, Gemini model fix
 
@@ -56,6 +56,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 02-ai-web-flow-fixes P03 | 2min | 2 tasks | 2 files |
 | Phase 03-ai-plan-generation P01 | 5min | 2 tasks | 2 files |
 | Phase 03-ai-plan-generation P02 | 8min | 2 tasks | 1 files |
+| Phase 04-live-circle-feed P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,10 @@ Recent decisions affecting current work:
 - [Phase 03-01]: dailyActions removed from refine prompt — aligns with onboarding simplification decision from Phase 02
 - [Phase 03-ai-plan-generation]: generatingHabitId replaces regeneratingHabitId — one variable covers both initial generation and regeneration loading states
 - [Phase 03-ai-plan-generation]: showRegenerateConfirm gates regeneration — button sets state, confirmation dialog calls handler
+- [Phase 04-live-circle-feed]: MIN(hl.id) as representative habit_log_id per (user_id, date) group — deterministic for reaction targeting
+- [Phase 04-live-circle-feed]: Reaction counts embedded in get_circle_feed RPC as JSONB — avoids N+1 on frontend
+- [Phase 04-live-circle-feed]: habit_log_id FK nullable ON DELETE SET NULL — preserves pre-Phase-4 halaqa_reactions rows
+- [Phase 04-live-circle-feed]: SECURITY DEFINER + explicit membership check pattern for get_circle_feed — safe cross-RLS member data access
 
 ### Pending Todos
 
@@ -95,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T01:50:03.513Z
-Stopped at: Completed 03-ai-plan-generation-03-02-PLAN.md — awaiting human verify checkpoint
+Last session: 2026-03-17T23:10:14.425Z
+Stopped at: Completed 04-live-circle-feed-04-01-PLAN.md
 Resume file: None

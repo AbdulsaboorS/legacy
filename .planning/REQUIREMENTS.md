@@ -91,7 +91,7 @@ Active requirements for the Eid al-Fitr 2026 launch (March 20-21). Validated fea
 | CIRCLE-02 | Phase 1 | Complete |
 | CIRCLE-03 | Phase 1 | Complete |
 | NOTIF-01 | Phase 4 | Pending |
-| NOTIF-02 | Phase 4 | Pending |
+| NOTIF-02 | Phase 4 | Complete |
 | SHARE-01 | Phase 3 | Pending |
 | SHARE-02 | Phase 3 | Pending |
 | JOIN-01 | Phase 3 | Pending |
