@@ -86,6 +86,7 @@ export interface HalaqaReaction {
   emoji: string;
   date: string;
   created_at: string;
+  habit_log_id?: string | null;
 }
 
 // Preset habits for onboarding selection
@@ -298,4 +299,24 @@ export interface HabitPlan {
   actionable_steps: ActionableStep[] | null;
   weekly_roadmap: WeekEntry[] | null;
   created_at: string; // ISO string — used to derive current week (1–4)
+}
+
+// ================================================================
+// Circle Feed (Phase 4)
+// Returned by get_circle_feed(p_halaqa_id) RPC
+// ================================================================
+
+export interface FeedReaction {
+  [emoji: string]: number; // e.g. { "🤲": 2, "🔥": 1 }
+}
+
+export interface FeedRow {
+  type: "log" | "milestone" | "joined";
+  user_id: string;
+  display_name: string;
+  habits: { name: string; icon: string }[];  // empty for milestone/joined
+  streak: number;
+  created_at: string;           // ISO string
+  habit_log_id: string | null;  // null for milestone/joined rows
+  reactions: FeedReaction;      // {} if no reactions yet
 }
