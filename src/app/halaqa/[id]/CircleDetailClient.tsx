@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import type { Halaqa } from "@/lib/types";
+import CircleFeed from "@/components/CircleFeed";
 
 interface MemberDetail {
   user_id: string;
@@ -88,6 +89,7 @@ export default function CircleDetailClient() {
   const [memberCount, setMemberCount] = useState(0);
   const [doneCount, setDoneCount] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
@@ -98,6 +100,7 @@ export default function CircleDetailClient() {
       router.push("/");
       return;
     }
+    setCurrentUserId(user.id);
 
     // 1. Load halaqa metadata
     // Check sessionStorage for a freshly-created halaqa — RLS recursive
@@ -262,23 +265,6 @@ export default function CircleDetailClient() {
     }
   };
 
-  const sendReaction = async (receiverId: string, emoji: string) => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user && user.id !== receiverId) {
-      await supabase.from("halaqa_reactions").insert({
-        halaqa_id: halaqaId,
-        sender_id: user.id,
-        receiver_id: receiverId,
-        emoji,
-        date: today,
-      });
-      toast.success(`MashaAllah! ${emoji} sent!`);
-    }
-  };
-
   const handleBack = () => {
     sessionStorage.setItem("halaqaTab", "mine");
     router.push("/halaqa");
@@ -400,6 +386,11 @@ export default function CircleDetailClient() {
           >
             Invite
           </button>
+        </div>
+
+        {/* Circle Feed — always visible, not gated by hasLoggedToday */}
+        <div style={{ marginBottom: "32px" }}>
+          <CircleFeed halaqaId={halaqaId} currentUserId={currentUserId} />
         </div>
 
         {/* Member list section */}
@@ -530,32 +521,6 @@ export default function CircleDetailClient() {
                     </p>
                   </div>
 
-                  {/* Reactions */}
-                  <div
-                    style={{ display: "flex", gap: "4px", flexShrink: 0 }}
-                  >
-                    {["🤲", "💪", "🔥"].map((emoji) => (
-                      <button
-                        key={emoji}
-                        onClick={() => sendReaction(member.user_id, emoji)}
-                        style={{
-                          width: "28px",
-                          height: "28px",
-                          borderRadius: "50%",
-                          background: "var(--background-secondary)",
-                          border: "1px solid var(--surface-border)",
-                          cursor: "pointer",
-                          fontSize: "0.8rem",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                        title={`Send ${emoji}`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Habit chips */}

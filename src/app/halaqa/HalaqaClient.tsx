@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
-import type { Halaqa } from "@/lib/types";
+import type { Halaqa, FeedRow } from "@/lib/types";
 
 interface CircleCardData {
   halaqa: Halaqa;
@@ -106,6 +106,7 @@ export default function HalaqaClient() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newCircleName, setNewCircleName] = useState("");
+  const [dotCircles, setDotCircles] = useState<Set<string>>(new Set());
 
   const today = new Date().toISOString().split("T")[0];
   const activeHalaqaInitialized = useRef(false);
@@ -234,6 +235,24 @@ export default function HalaqaClient() {
     );
 
     setCircleCards(cards);
+
+    // Check for unseen activity on each circle
+    const supabase2 = createClient();
+    const newDots = new Set<string>();
+    await Promise.all(
+      myHalaqas.map(async (h) => {
+        const lastOpened = localStorage.getItem(`circle_last_opened_${h.id}`);
+        const { data } = await supabase2.rpc("get_circle_feed", {
+          p_halaqa_id: h.id,
+        });
+        if (data && (data as FeedRow[]).length > 0) {
+          const latestTs = new Date((data as FeedRow[])[0].created_at).getTime();
+          const lastTs = lastOpened ? parseInt(lastOpened, 10) : 0;
+          if (latestTs > lastTs) newDots.add(h.id);
+        }
+      })
+    );
+    setDotCircles(newDots);
   }, [myHalaqas, today]);
 
   useEffect(() => {
@@ -594,7 +613,13 @@ export default function HalaqaClient() {
               circleCards.map((card) => (
                 <button
                   key={card.halaqa.id}
-                  onClick={() => router.push(`/halaqa/${card.halaqa.id}`)}
+                  onClick={() => {
+                    localStorage.setItem(
+                      `circle_last_opened_${card.halaqa.id}`,
+                      Date.now().toString()
+                    );
+                    router.push(`/halaqa/${card.halaqa.id}`);
+                  }}
                   className="animate-fade-in"
                   style={{
                     width: "100%",
@@ -625,7 +650,20 @@ export default function HalaqaClient() {
                       {card.doneCount}/{card.memberCount} done today
                     </p>
                   </div>
-                  <AvatarStack members={card.memberPreviews} />
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {dotCircles.has(card.halaqa.id) && (
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          background: "#D97706",
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+                    <AvatarStack members={card.memberPreviews} />
+                  </div>
                 </button>
               ))
             )}
