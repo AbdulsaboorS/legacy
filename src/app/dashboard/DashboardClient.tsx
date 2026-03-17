@@ -22,7 +22,6 @@ export default function DashboardClient() {
   const [refineMessage, setRefineMessage] = useState("");
   const [refineStreaming, setRefineStreaming] = useState(false);
   const [refinedPlan, setRefinedPlan] = useState<Record<string, unknown> | null>(null);
-  const [regeneratingHabitId, setRegeneratingHabitId] = useState<string | null>(null);
   const [generatingHabitId, setGeneratingHabitId] = useState<string | null>(null);
   const [generationText, setGenerationText] = useState<Record<string, string>>({});
   const [generationError, setGenerationError] = useState<Record<string, boolean>>({});
@@ -505,11 +504,28 @@ export default function DashboardClient() {
                     <p style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {habit.accepted_amount || habit.suggested_amount || ""}
                     </p>
+                    {habitPlan && !isMasterplanOpen && currentWeek && (
+                      <p style={{ fontSize: "0.65rem", color: "var(--accent)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        Week {currentWeek.week}: {currentWeek.focus} · Day {Math.min(Math.floor((Date.now() - new Date(habitPlan.created_at).getTime()) / 86400000) + 1, 28)} of 28
+                      </p>
+                    )}
                   </div>
                   <div style={{ width: "26px", height: "26px", borderRadius: "50%", border: isCompleted ? "none" : "2px solid var(--surface-border)", background: isCompleted ? "var(--accent)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
                     {isCompleted && <span style={{ color: "#fff", fontSize: "0.75rem", fontWeight: 700 }}>✓</span>}
                   </div>
                 </button>
+
+                {/* Generate AI Plan button — shown when no plan, not generating, first 3 habits only */}
+                {!habitPlan && !generatingHabitId && !generationText[habit.id] && !generationError[habit.id] && index < 3 && (
+                  <div style={{ paddingLeft: "46px", paddingBottom: "12px", borderBottom: "1px solid var(--surface-border)" }}>
+                    <button
+                      onClick={() => { setExpandedMasterplan(habit.id); handleGeneratePlan(habit.id); }}
+                      style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", padding: "5px 14px", borderRadius: "999px", background: "rgba(217,119,6,0.1)", border: "1px solid rgba(217,119,6,0.3)", color: "var(--accent)", cursor: "pointer" }}
+                    >
+                      ✨ Generate AI Plan
+                    </button>
+                  </div>
+                )}
 
                 {/* Masterplan toggle */}
                 {hasMasterplan && (
@@ -613,12 +629,29 @@ export default function DashboardClient() {
                               ✏️ Refine Plan
                             </button>
                             <button
-                              onClick={() => handleRegeneratePlan(habit.id)}
-                              disabled={regeneratingHabitId === habit.id}
-                              style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: regeneratingHabitId === habit.id ? "not-allowed" : "pointer", opacity: regeneratingHabitId === habit.id ? 0.6 : 1 }}
+                              onClick={() => setShowRegenerateConfirm(habit.id)}
+                              disabled={generatingHabitId === habit.id}
+                              style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: generatingHabitId === habit.id ? "not-allowed" : "pointer", opacity: generatingHabitId === habit.id ? 0.6 : 1 }}
                             >
-                              {regeneratingHabitId === habit.id ? "Generating..." : "🔄 Regenerate"}
+                              {generatingHabitId === habit.id ? "Generating..." : "🔄 Regenerate"}
                             </button>
+                          </div>
+                        )}
+
+                        {/* Regenerate confirmation dialog */}
+                        {showRegenerateConfirm === habit.id && (
+                          <div style={{ padding: "12px 14px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)" }}>
+                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", marginBottom: "10px" }}>
+                              This will replace your current plan. Continue?
+                            </p>
+                            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                              <button onClick={() => setShowRegenerateConfirm(null)} style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: "pointer" }}>
+                                Cancel
+                              </button>
+                              <button onClick={() => handleRegeneratePlan(habit.id)} style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer" }}>
+                                Replace Plan
+                              </button>
+                            </div>
                           </div>
                         )}
 
