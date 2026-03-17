@@ -93,7 +93,6 @@ Plans:
 |-------|--------|-------|
 | 1. Circles UI | ✓ Complete | Both plans done, human verified |
 | 2. AI + Web Flow | ✓ Complete | 2026-03-16 |
-| 3. AI Plan Generation | Not started | Next up |
-| 4. Web App Flow Polish | Not started | |
+| 3. AI Plan Generation | 1/2 | In Progress|  | 4. Web App Flow Polish | Not started | |
 | 5. Mobile App | Not started | Packages + bundle ID done |
 | 6. Push Notifications + Launch | Not started | Migrations + packages done |
