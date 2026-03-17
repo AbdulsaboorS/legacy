@@ -311,7 +311,7 @@ export interface FeedReaction {
 }
 
 export interface FeedRow {
-  type: "log" | "milestone" | "joined";
+  row_type: "log" | "milestone" | "joined";
   user_id: string;
   display_name: string;
   habits: { name: string; icon: string }[];  // empty for milestone/joined

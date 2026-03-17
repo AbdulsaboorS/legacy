@@ -31,7 +31,7 @@ ALTER TABLE halaqa_reactions
 
 CREATE OR REPLACE FUNCTION get_circle_feed(p_halaqa_id UUID)
 RETURNS TABLE(
-  type         TEXT,
+  row_type     TEXT,
   user_id      UUID,
   display_name TEXT,
   habits       JSONB,
@@ -63,7 +63,7 @@ BEGIN
     -- grouped per member per day. Uses MIN(hl.id) as the
     -- representative habit_log_id for reactions.
     SELECT
-      'log'::TEXT                                                              AS type,
+      'log'::TEXT                                                              AS row_type,
       hl.user_id,
       p.preferred_name                                                         AS display_name,
       jsonb_agg(jsonb_build_object('name', h.name, 'icon', h.icon)
@@ -77,12 +77,6 @@ BEGIN
     LEFT JOIN streaks s ON s.user_id = hl.user_id
     WHERE hl.created_at >= p_window
       AND hl.completed  = true
-      AND hl.habit_id IN (
-        SELECT DISTINCT hl2.habit_id
-        FROM habit_logs hl2
-        JOIN halaqa_members hm2 ON hm2.user_id = hl2.user_id
-        WHERE hm2.halaqa_id = p_halaqa_id
-      )
       AND hl.user_id IN (
         SELECT user_id FROM halaqa_members WHERE halaqa_id = p_halaqa_id
       )
@@ -92,7 +86,7 @@ BEGIN
   milestone_rows AS (
     -- Members whose streak hit a milestone number today
     SELECT
-      'milestone'::TEXT                                      AS type,
+      'milestone'::TEXT                                      AS row_type,
       hm.user_id,
       p.preferred_name                                       AS display_name,
       '[]'::JSONB                                            AS habits,
@@ -110,7 +104,7 @@ BEGIN
   joined_rows AS (
     -- Members who joined this halaqa within the 48hr window
     SELECT
-      'joined'::TEXT       AS type,
+      'joined'::TEXT       AS row_type,
       hm.user_id,
       p.preferred_name     AS display_name,
       '[]'::JSONB          AS habits,
@@ -144,7 +138,7 @@ BEGIN
 
   -- Union all row types and join reactions, order newest first
   SELECT
-    r.type,
+    r.row_type,
     r.user_id,
     r.display_name,
     r.habits,

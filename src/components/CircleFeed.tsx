@@ -242,7 +242,7 @@ export default function CircleFeed({ halaqaId, currentUserId }: CircleFeedProps)
         if (section !== "older") lastSection = section;
 
         // ── Milestone item ────────────────────────────────────────
-        if (row.type === "milestone") {
+        if (row.row_type === "milestone") {
           return (
             <div key={`${row.user_id}-${row.created_at}-${index}`}>
               {showDivider && (
@@ -278,7 +278,7 @@ export default function CircleFeed({ halaqaId, currentUserId }: CircleFeedProps)
         }
 
         // ── Joined item ───────────────────────────────────────────
-        if (row.type === "joined") {
+        if (row.row_type === "joined") {
           return (
             <div key={`${row.user_id}-${row.created_at}-${index}`}>
               {showDivider && (
