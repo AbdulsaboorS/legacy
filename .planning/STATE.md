@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-live-circle-feed-04-01-PLAN.md
-last_updated: "2026-03-17T23:10:14.427Z"
+stopped_at: Completed 04-live-circle-feed-04-02-PLAN.md
+last_updated: "2026-03-17T23:27:23.503Z"
 last_activity: 2026-03-17 — Streaming generation UX, no-polling dashboard, Gemini model fix
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
   percent: 20
 ---
 
@@ -57,6 +57,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 03-ai-plan-generation P01 | 5min | 2 tasks | 2 files |
 | Phase 03-ai-plan-generation P02 | 8min | 2 tasks | 1 files |
 | Phase 04-live-circle-feed P01 | 2min | 2 tasks | 2 files |
+| Phase 04-live-circle-feed P02 | 25min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,8 @@ Recent decisions affecting current work:
 - [Phase 04-live-circle-feed]: Reaction counts embedded in get_circle_feed RPC as JSONB — avoids N+1 on frontend
 - [Phase 04-live-circle-feed]: habit_log_id FK nullable ON DELETE SET NULL — preserves pre-Phase-4 halaqa_reactions rows
 - [Phase 04-live-circle-feed]: SECURITY DEFINER + explicit membership check pattern for get_circle_feed — safe cross-RLS member data access
+- [Phase 04-live-circle-feed]: CircleFeed is self-contained — polling, reactions, and empty state all handled internally, not by parent components
+- [Phase 04-live-circle-feed]: sendReaction removed from CircleDetailClient entirely — CircleFeed owns the reaction UX
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T23:10:14.425Z
-Stopped at: Completed 04-live-circle-feed-04-01-PLAN.md
+Last session: 2026-03-17T23:27:23.501Z
+Stopped at: Completed 04-live-circle-feed-04-02-PLAN.md
 Resume file: None

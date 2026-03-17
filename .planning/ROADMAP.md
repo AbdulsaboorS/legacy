@@ -9,7 +9,7 @@ Seven phases. Web-first: fix AI plan generation, build the live circle feed, pol
 - [x] **Phase 1: Circles UI** — Circle detail page and card list (highest value prop)
 - [x] **Phase 2: AI + Web Flow Fixes** — Fix AI masterplan flow, finalize all web screens (completed 2026-03-16)
 - [x] **Phase 3: AI Plan Generation** — Fix plan generation end-to-end so it actually works (completed 2026-03-17)
-- [ ] **Phase 4: Live Circle Feed** — Real-time activity feed on circle detail, reactions on feed items, notification dots
+- [x] **Phase 4: Live Circle Feed** — Real-time activity feed on circle detail, reactions on feed items, notification dots (completed 2026-03-17)
 - [ ] **Phase 5: Web App Flow Polish** — UX polish, tab performance, streak sharing, join page, PWA basics
 - [ ] **Phase 6: Mobile App** — Capacitor wrap, App Store, Google Play, OAuth deep links
 - [ ] **Phase 7: Push Notifications + Launch** — FCM, cron jobs, OG/SEO, analytics, error monitoring
@@ -124,6 +124,6 @@ Plans:
 | 1. Circles UI | ✓ Complete | Both plans done, human verified |
 | 2. AI + Web Flow | ✓ Complete | 2026-03-16 |
 | 3. AI Plan Generation | ✓ Complete | 2026-03-17 |
-| 4. Live Circle Feed | 1/2 | In Progress|  | 5. Web App Flow Polish | Not started | |
+| 4. Live Circle Feed | 2/2 | Complete   | 2026-03-17 | 5. Web App Flow Polish | Not started | |
 | 6. Mobile App | Not started | Packages + bundle ID done |
 | 7. Push Notifications + Launch | Not started | Migrations + packages done |
