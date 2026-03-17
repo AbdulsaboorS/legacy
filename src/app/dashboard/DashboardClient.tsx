@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PROPHETIC_QUOTES, type Habit, type HabitLog, type Streak, type HabitPlan, type WeekEntry } from "@/lib/types";
@@ -23,9 +23,10 @@ export default function DashboardClient() {
   const [refineStreaming, setRefineStreaming] = useState(false);
   const [refinedPlan, setRefinedPlan] = useState<Record<string, unknown> | null>(null);
   const [regeneratingHabitId, setRegeneratingHabitId] = useState<string | null>(null);
-  // polling state: 'pending' while generating, 'timeout' after 60s with no result
-  const [planPollingState, setPlanPollingState] = useState<Record<string, "pending" | "timeout">>({});
-  const pollingIntervals = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+  const [generatingHabitId, setGeneratingHabitId] = useState<string | null>(null);
+  const [generationText, setGenerationText] = useState<Record<string, string>>({});
+  const [generationError, setGenerationError] = useState<Record<string, boolean>>({});
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState<string | null>(null);
 
   const todayQuote = PROPHETIC_QUOTES[new Date().getDate() % PROPHETIC_QUOTES.length];
   const today = new Date().toISOString().split("T")[0];
@@ -72,13 +73,6 @@ export default function DashboardClient() {
         const plansMap: Record<string, HabitPlan> = {};
         planResults.forEach(({ habitId, plan }) => { if (plan) plansMap[habitId] = plan; });
         setHabitPlans(plansMap);
-
-        // Start polling for first 3 habits that have no plan yet (plans may be generating in background)
-        const pending: Record<string, "pending"> = {};
-        habitsData.slice(0, 3).forEach((h) => {
-          if (!plansMap[h.id]) pending[h.id] = "pending";
-        });
-        if (Object.keys(pending).length > 0) setPlanPollingState(pending);
       }
     }
 
@@ -118,44 +112,6 @@ export default function DashboardClient() {
     loadData();
   }, [loadData]);
 
-  // Poll for habits whose plans are still generating
-  useEffect(() => {
-    const pendingIds = Object.keys(planPollingState).filter((id) => planPollingState[id] === "pending");
-    if (pendingIds.length === 0) return;
-
-    pendingIds.forEach((habitId) => {
-      if (pollingIntervals.current[habitId]) return; // already polling
-      let attempts = 0;
-      pollingIntervals.current[habitId] = setInterval(async () => {
-        attempts++;
-        if (attempts > 20) {
-          clearInterval(pollingIntervals.current[habitId]);
-          delete pollingIntervals.current[habitId];
-          setPlanPollingState((prev) => ({ ...prev, [habitId]: "timeout" }));
-          return;
-        }
-        try {
-          const plans: HabitPlan[] = await fetch(`/api/ai/plan/list?habitId=${habitId}`).then((r) => r.json());
-          if (plans[0]) {
-            setHabitPlans((prev) => ({ ...prev, [habitId]: plans[0] }));
-            setPlanPollingState((prev) => {
-              const next = { ...prev };
-              delete next[habitId];
-              return next;
-            });
-            clearInterval(pollingIntervals.current[habitId]);
-            delete pollingIntervals.current[habitId];
-          }
-        } catch {}
-      }, 3000);
-    });
-
-    return () => {
-      Object.values(pollingIntervals.current).forEach(clearInterval);
-      pollingIntervals.current = {};
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planPollingState]);
 
   const toggleHabit = async (habitId: string) => {
     const supabase = createClient();
@@ -306,20 +262,57 @@ export default function DashboardClient() {
     setRefineHabitId(null); setRefineMessage(""); setRefinedPlan(null);
   };
 
-  const handleRegeneratePlan = async (habitId: string) => {
+  const handleGeneratePlan = async (habitId: string) => {
     const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
-    setRegeneratingHabitId(habitId);
+    setGeneratingHabitId(habitId);
+    setGenerationText((prev) => ({ ...prev, [habitId]: "" }));
+    setGenerationError((prev) => { const n = { ...prev }; delete n[habitId]; return n; });
     try {
-      await fetch("/api/ai/plan/generate-and-save", {
+      const res = await fetch("/api/ai/plan/generate-stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ habitId, habitName: habit.name }),
       });
+      if (!res.ok || !res.body) throw new Error("Stream failed");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6);
+          if (payload === "[DONE]") break;
+          try {
+            const p = JSON.parse(payload) as { text?: string; error?: string };
+            if (p.error) throw new Error(p.error);
+            if (p.text) {
+              accumulated += p.text;
+              setGenerationText((prev) => ({ ...prev, [habitId]: accumulated }));
+            }
+          } catch { /* ignore parse errors on partial chunks */ }
+        }
+      }
+      // Save the accumulated plan
+      await fetch("/api/ai/plan/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ habitId, plan: JSON.parse(accumulated) }),
+      });
       await refreshPlanForHabit(habitId);
-    } catch { /* ignore */ } finally {
-      setRegeneratingHabitId(null);
+      setGenerationText((prev) => { const n = { ...prev }; delete n[habitId]; return n; });
+    } catch {
+      setGenerationError((prev) => ({ ...prev, [habitId]: true }));
+    } finally {
+      setGeneratingHabitId(null);
     }
+  };
+
+  const handleRegeneratePlan = async (habitId: string) => {
+    setShowRegenerateConfirm(null);
+    await handleGeneratePlan(habitId);
   };
 
   const completedCount = Object.values(todayLogs).filter(Boolean).length;
@@ -490,8 +483,7 @@ export default function DashboardClient() {
           {habits.map((habit, index) => {
             const isCompleted = todayLogs[habit.id];
             const habitPlan = habitPlans[habit.id];
-            const pollingState = planPollingState[habit.id];
-            const hasMasterplan = (habit.weekly_roadmap?.length ?? 0) > 0 || !!habitPlan || !!pollingState;
+            const hasMasterplan = !!habitPlan || generatingHabitId === habit.id || !!generationText[habit.id] || !!generationError[habit.id];
             const isMasterplanOpen = expandedMasterplan === habit.id;
             const currentWeek = habitPlan ? getCurrentWeek(habitPlan) : null;
             const philosophy = habitPlan?.core_philosophy ?? habit.core_philosophy;
@@ -535,26 +527,28 @@ export default function DashboardClient() {
                         className="animate-fade-in"
                         style={{ padding: "16px", background: theme === "dark" ? "rgba(217,119,6,0.06)" : "rgba(217,119,6,0.03)", borderBottom: "1px solid var(--surface-border)", display: "flex", flexDirection: "column", gap: "16px" }}
                       >
-                        {/* Plan generating / timeout states */}
-                        {pollingState === "pending" && (
-                          <div style={{ padding: "12px 14px", background: "rgba(217,119,6,0.06)", borderRadius: "8px", border: "1px solid rgba(217,119,6,0.2)", display: "flex", alignItems: "center", gap: "10px" }}>
-                            <div style={{ display: "flex", gap: "3px" }}>
-                              {[0, 1, 2].map((i) => (
-                                <div key={i} style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--accent)", animation: `pulse-soft 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-                              ))}
-                            </div>
-                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)" }}>Generating your personalized plan...</p>
+                        {/* Streaming generation display */}
+                        {(generatingHabitId === habit.id || generationText[habit.id]) && (
+                          <div style={{ padding: "12px 14px", background: "rgba(217,119,6,0.06)", borderRadius: "8px", border: "1px solid rgba(217,119,6,0.2)" }}>
+                            <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "8px" }}>
+                              {generatingHabitId === habit.id ? "Generating your plan..." : "Processing..."}
+                            </p>
+                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", fontFamily: "monospace", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                              {generationText[habit.id] || ""}
+                            </p>
                           </div>
                         )}
-                        {pollingState === "timeout" && (
+
+                        {/* Error state */}
+                        {generationError[habit.id] && !habitPlan && (
                           <div style={{ padding: "12px 14px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)" }}>Plan generation timed out.</p>
+                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)" }}>Plan generation failed.</p>
                             <button
-                              onClick={() => handleRegeneratePlan(habit.id)}
-                              disabled={regeneratingHabitId === habit.id}
-                              style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer", opacity: regeneratingHabitId === habit.id ? 0.6 : 1 }}
+                              onClick={() => { setGenerationError((prev) => { const n = { ...prev }; delete n[habit.id]; return n; }); handleGeneratePlan(habit.id); }}
+                              disabled={generatingHabitId === habit.id}
+                              style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer" }}
                             >
-                              {regeneratingHabitId === habit.id ? "Generating..." : "Generate plan"}
+                              Retry
                             </button>
                           </div>
                         )}
