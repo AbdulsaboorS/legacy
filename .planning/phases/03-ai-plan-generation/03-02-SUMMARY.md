@@ -110,10 +110,18 @@ Each task was committed atomically:
 - **Verification:** TypeScript compiles with zero errors
 - **Committed in:** c8cf902 (Task 2 commit)
 
+**3. [Rule 1 - Bug] Updated all Gemini routes from gemini-2.0-flash to gemini-3-flash-preview**
+- **Found during:** Task 3 human-verify checkpoint
+- **Issue:** `gemini-2.0-flash` is deprecated for new users — all 5 Gemini API routes were using the old model ID, causing generation to fail in the live environment
+- **Fix:** Updated model string in all 5 routes to `gemini-3-flash-preview`
+- **Files modified:** All files under src/app/api/ai/
+- **Verification:** Generation flows tested in browser after fix — all working
+- **Committed in:** 10948d7 (fix)
+
 ---
 
-**Total deviations:** 2 auto-fixed (both Rule 1 — bugs caught during task execution)
-**Impact on plan:** Both fixes required for correctness. No scope change.
+**Total deviations:** 3 auto-fixed (2 Rule 1 during task execution, 1 Rule 1 during verification)
+**Impact on plan:** All fixes required for correctness. No scope change.
 
 ## Issues Encountered
 None beyond the deviations documented above.

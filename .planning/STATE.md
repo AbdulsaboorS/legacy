@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-ai-plan-generation-03-02-PLAN.md — awaiting human verify checkpoint
-last_updated: "2026-03-17T01:50:03.515Z"
-last_activity: 2026-03-16 — Simplified onboarding to 4-step flow, background AI plan gen, dashboard polling
+status: ready
+stopped_at: Completed Phase 3 (03-ai-plan-generation) — all 2 plans done, human verified
+last_updated: "2026-03-17T02:10:00.000Z"
+last_activity: 2026-03-17 — Streaming generation UX, no-polling dashboard, Gemini model fix
 progress:
   total_phases: 6
   completed_phases: 3
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ## Current Position
 
-Phase: 2 of 7 (AI + Web Flow) — COMPLETE ✓
-Phase: 3 next (Polish — streak sharing, join page redesign)
-Status: Onboarding verified ✓. Next session: update roadmap + plan Phase 3.
-Last activity: 2026-03-16 — Simplified onboarding to 4-step flow, background AI plan gen, dashboard polling
+Phase: 3 of 7 (AI Plan Generation) — COMPLETE ✓
+Phase: 4 next (Web App Flow Polish — UX polish, streak sharing, join page)
+Status: Phase 3 verified ✓. Next session: plan and execute Phase 4.
+Last activity: 2026-03-17 — Streaming generation UX, no-polling dashboard, Gemini model fix
 
 Progress: [██░░░░░░░░] 20%
 

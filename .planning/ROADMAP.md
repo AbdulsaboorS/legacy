@@ -8,7 +8,7 @@ Six phases. Web-first: fix AI plan generation, polish web flows, then wrap for m
 
 - [x] **Phase 1: Circles UI** — Circle detail page and card list (highest value prop)
 - [x] **Phase 2: AI + Web Flow Fixes** — Fix AI masterplan flow, finalize all web screens (completed 2026-03-16)
-- [ ] **Phase 3: AI Plan Generation** — Fix plan generation end-to-end so it actually works
+- [x] **Phase 3: AI Plan Generation** — Fix plan generation end-to-end so it actually works (completed 2026-03-17)
 - [ ] **Phase 4: Web App Flow Polish** — UX polish, tab performance, streak sharing, join page, PWA basics
 - [ ] **Phase 5: Mobile App** — Capacitor wrap, App Store, Google Play, OAuth deep links
 - [ ] **Phase 6: Push Notifications + Launch** — FCM, cron jobs, OG/SEO, analytics, error monitoring
@@ -48,11 +48,11 @@ Six phases. Web-first: fix AI plan generation, polish web flows, then wrap for m
   3. Refine flow works: inline text input, streaming preview, Approve saves, Discard discards.
   4. Regenerate requires confirmation before replacing the current plan.
   5. Plan generation failure shows "Plan generation failed" + Retry button.
-**Plans**: 2 plans
+**Plans**: 2 plans (complete)
 
 Plans:
-- [ ] 03-01-PLAN.md — New streaming generate-stream route + fix refine prompt
-- [ ] 03-02-PLAN.md — Dashboard rework: streaming generation, empty state, error state, regenerate confirm
+- [x] 03-01-PLAN.md — New streaming generate-stream route + fix refine prompt
+- [x] 03-02-PLAN.md — Dashboard rework: streaming generation, empty state, error state, regenerate confirm
 
 ### Phase 4: Web App Flow Polish
 **Goal**: Every web screen is complete and feels production-ready. Tab navigation is fast. Streak sharing and join page are finalized.
@@ -93,6 +93,7 @@ Plans:
 |-------|--------|-------|
 | 1. Circles UI | ✓ Complete | Both plans done, human verified |
 | 2. AI + Web Flow | ✓ Complete | 2026-03-16 |
-| 3. AI Plan Generation | 1/2 | In Progress|  | 4. Web App Flow Polish | Not started | |
+| 3. AI Plan Generation | ✓ Complete | 2026-03-17 |
+| 4. Web App Flow Polish | Not started | |
 | 5. Mobile App | Not started | Packages + bundle ID done |
 | 6. Push Notifications + Launch | Not started | Migrations + packages done |
