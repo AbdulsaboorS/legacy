@@ -53,11 +53,10 @@ Apply the refinement and return a COMPLETE revised plan with the SAME JSON struc
 {
   "corePhilosophy": "...",
   "actionableSteps": [ ...3 items... ],
-  "weeklyRoadmap": [ ...4 weeks... ],
-  "dailyActions": [ ...all 28 entries with day, action, tip... ]
+  "weeklyRoadmap": [ ...4 weeks... ]
 }
 
-All 28 dailyActions entries are required. Do not stop before day 28. Keep each action under 80 characters. Keep each tip under 100 characters. Return ONLY valid JSON. No markdown. No code blocks. No extra text.`;
+Return ONLY valid JSON. No markdown. No code blocks. No extra text.`;
 
   const stream = new ReadableStream({
     async start(controller) {
