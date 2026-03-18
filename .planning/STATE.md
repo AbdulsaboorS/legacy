@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05.1-01-PLAN.md
-last_updated: "2026-03-18T23:36:09.793Z"
+stopped_at: Completed 05.1-02-PLAN.md
+last_updated: "2026-03-18T23:40:33.060Z"
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
   percent: 57
 ---
 
@@ -61,6 +61,7 @@ Progress: [████░░░░░░] 57%
 | Phase 05-web-app-flow-polish P03 | 3min | 1 tasks | 1 files |
 | Phase 05-web-app-flow-polish P04 | 8min | 2 tasks | 3 files |
 | Phase 05.1-habit-detail-page P01 | 2min | 2 tasks | 2 files |
+| Phase 05.1-habit-detail-page P02 | 2min 34s | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,8 @@ Recent decisions affecting current work:
 - [Phase 05-web-app-flow-polish]: Optimistic description save in CircleDetailClient — local setHalaqa update, no DB refetch needed
 - [Phase 05.1-habit-detail-page]: getCurrentWeek and streamPlan copied verbatim from DashboardClient as module-level helpers — avoids shared-module coupling
 - [Phase 05.1-habit-detail-page]: showRefine boolean toggle (not refineHabitId string) — single-habit context makes string key unnecessary
+- [Phase 05.1-habit-detail-page]: Your Plan nav row uses !!habitPlan (not hasMasterplan) — only shows for confirmed saved plans, not during streaming
+- [Phase 05.1-habit-detail-page]: Inline streaming/error UI moved outside removed masterplan block — generation progress visible during no-plan habit generation on dashboard
 
 ### Pending Todos
 
@@ -117,8 +120,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T23:36:09.791Z
-Stopped at: Completed 05.1-01-PLAN.md
+Last session: 2026-03-18T23:40:33.058Z
+Stopped at: Completed 05.1-02-PLAN.md
 Resume file: None
 
 ## MCP Setup
