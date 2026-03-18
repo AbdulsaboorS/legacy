@@ -443,11 +443,6 @@ export default function DashboardClient() {
                     <p style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {habit.accepted_amount || habit.suggested_amount || ""}
                     </p>
-                    {habitPlan && (
-                      <p style={{ fontSize: "0.65rem", color: "var(--accent)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        View your plan ›
-                      </p>
-                    )}
                   </div>
                   <div style={{ width: "26px", height: "26px", borderRadius: "50%", border: isCompleted ? "none" : "2px solid var(--surface-border)", background: isCompleted ? "var(--accent)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
                     {isCompleted && <span style={{ color: "#fff", fontSize: "0.75rem", fontWeight: 700 }}>✓</span>}
