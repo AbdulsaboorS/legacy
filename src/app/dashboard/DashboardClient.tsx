@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PROPHETIC_QUOTES, type Habit, type HabitLog, type Streak, type HabitPlan, type WeekEntry } from "@/lib/types";
+import { PROPHETIC_QUOTES, type Habit, type HabitLog, type Streak, type HabitPlan } from "@/lib/types";
 import { useTheme } from "@/components/ThemeProvider";
 
 export default function DashboardClient() {
@@ -16,16 +16,10 @@ export default function DashboardClient() {
   const [userName, setUserName] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const [shawwalDaysCompleted, setShawwalDaysCompleted] = useState(0);
-  const [expandedMasterplan, setExpandedMasterplan] = useState<string | null>(null);
   const [habitPlans, setHabitPlans] = useState<Record<string, HabitPlan>>({});
-  const [refineHabitId, setRefineHabitId] = useState<string | null>(null);
-  const [refineMessage, setRefineMessage] = useState("");
-  const [refineStreaming, setRefineStreaming] = useState(false);
-  const [refinedPlan, setRefinedPlan] = useState<Record<string, unknown> | null>(null);
   const [generatingHabitId, setGeneratingHabitId] = useState<string | null>(null);
   const [generationText, setGenerationText] = useState<Record<string, string>>({});
   const [generationError, setGenerationError] = useState<Record<string, boolean>>({});
-  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState<string | null>(null);
 
   const todayQuote = PROPHETIC_QUOTES[new Date().getDate() % PROPHETIC_QUOTES.length];
   const today = new Date().toISOString().split("T")[0];
@@ -211,54 +205,9 @@ export default function DashboardClient() {
     }
   };
 
-  const getCurrentWeek = (plan: HabitPlan): WeekEntry | null => {
-    if (!plan.weekly_roadmap?.length) return null;
-    const dayN = Math.floor((Date.now() - new Date(plan.created_at).getTime()) / 86400000) + 1;
-    const weekIndex = Math.max(0, Math.min(Math.ceil(dayN / 7), 4) - 1);
-    return plan.weekly_roadmap[weekIndex] ?? null;
-  };
-
-  const streamPlan = async (url: string, body: Record<string, unknown>): Promise<Record<string, unknown>> => {
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (!res.body) throw new Error("No body");
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let accumulated = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      for (const line of decoder.decode(value, { stream: true }).split("\n")) {
-        if (!line.startsWith("data: ")) continue;
-        const payload = line.slice(6);
-        if (payload === "[DONE]") break;
-        try { const p = JSON.parse(payload) as { text?: string }; if (p.text) accumulated += p.text; } catch {}
-      }
-    }
-    return JSON.parse(accumulated);
-  };
-
   const refreshPlanForHabit = async (habitId: string) => {
     const plans: HabitPlan[] = await fetch(`/api/ai/plan/list?habitId=${habitId}`).then((r) => r.json()).catch(() => []);
     if (plans[0]) setHabitPlans((prev) => ({ ...prev, [habitId]: plans[0] }));
-  };
-
-  const handleRefinePlan = async () => {
-    if (!refineHabitId || !refineMessage.trim()) return;
-    setRefineStreaming(true);
-    try {
-      const currentPlan = habitPlans[refineHabitId];
-      const plan = await streamPlan("/api/ai/plan/refine", { habitId: refineHabitId, currentPlan, refinementMessage: refineMessage });
-      setRefinedPlan(plan);
-    } catch { /* ignore */ } finally {
-      setRefineStreaming(false);
-    }
-  };
-
-  const handleApprovePlan = async () => {
-    if (!refineHabitId || !refinedPlan) return;
-    await fetch("/api/ai/plan/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ habitId: refineHabitId, plan: refinedPlan }) });
-    await refreshPlanForHabit(refineHabitId);
-    setRefineHabitId(null); setRefineMessage(""); setRefinedPlan(null);
   };
 
   const handleGeneratePlan = async (habitId: string) => {
@@ -307,11 +256,6 @@ export default function DashboardClient() {
     } finally {
       setGeneratingHabitId(null);
     }
-  };
-
-  const handleRegeneratePlan = async (habitId: string) => {
-    setShowRegenerateConfirm(null);
-    await handleGeneratePlan(habitId);
   };
 
   const completedCount = Object.values(todayLogs).filter(Boolean).length;
@@ -483,11 +427,6 @@ export default function DashboardClient() {
             const isCompleted = todayLogs[habit.id];
             const habitPlan = habitPlans[habit.id];
             const hasMasterplan = !!habitPlan || generatingHabitId === habit.id || !!generationText[habit.id] || !!generationError[habit.id];
-            const isMasterplanOpen = expandedMasterplan === habit.id;
-            const currentWeek = habitPlan ? getCurrentWeek(habitPlan) : null;
-            const philosophy = habitPlan?.core_philosophy ?? habit.core_philosophy;
-            const steps = habitPlan?.actionable_steps ?? habit.actionable_steps;
-            const roadmap = habitPlan?.weekly_roadmap ?? habit.weekly_roadmap;
             return (
               <div
                 key={habit.id}
@@ -504,9 +443,9 @@ export default function DashboardClient() {
                     <p style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {habit.accepted_amount || habit.suggested_amount || ""}
                     </p>
-                    {habitPlan && !isMasterplanOpen && currentWeek && (
+                    {habitPlan && (
                       <p style={{ fontSize: "0.65rem", color: "var(--accent)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        Week {currentWeek.week}: {currentWeek.focus} · Day {Math.min(Math.floor((Date.now() - new Date(habitPlan.created_at).getTime()) / 86400000) + 1, 28)} of 28
+                        View your plan ›
                       </p>
                     )}
                   </div>
@@ -519,7 +458,7 @@ export default function DashboardClient() {
                 {!habitPlan && !generatingHabitId && !generationText[habit.id] && !generationError[habit.id] && index < 3 && (
                   <div style={{ paddingLeft: "46px", paddingBottom: "12px", borderBottom: "1px solid var(--surface-border)" }}>
                     <button
-                      onClick={() => { setExpandedMasterplan(habit.id); handleGeneratePlan(habit.id); }}
+                      onClick={() => handleGeneratePlan(habit.id)}
                       style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", padding: "5px 14px", borderRadius: "999px", background: "rgba(217,119,6,0.1)", border: "1px solid rgba(217,119,6,0.3)", color: "var(--accent)", cursor: "pointer" }}
                     >
                       ✨ Want a personalized plan?
@@ -527,170 +466,43 @@ export default function DashboardClient() {
                   </div>
                 )}
 
-                {/* Masterplan toggle */}
-                {hasMasterplan && (
-                  <>
-                    <button
-                      onClick={() => setExpandedMasterplan(isMasterplanOpen ? null : habit.id)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0 8px 46px", background: "none", border: "none", borderBottom: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)" }}
-                    >
-                      <span>✨ Your Plan</span>
-                      <span style={{ display: "inline-block", transform: isMasterplanOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▾</span>
-                    </button>
-
-                    {isMasterplanOpen && (
-                      <div
-                        className="animate-fade-in"
-                        style={{ padding: "16px", background: theme === "dark" ? "rgba(217,119,6,0.06)" : "rgba(217,119,6,0.03)", borderBottom: "1px solid var(--surface-border)", display: "flex", flexDirection: "column", gap: "16px" }}
-                      >
-                        {/* Streaming generation display */}
-                        {(generatingHabitId === habit.id || generationText[habit.id]) && (
-                          <div style={{ padding: "12px 14px", background: "rgba(217,119,6,0.06)", borderRadius: "8px", border: "1px solid rgba(217,119,6,0.2)" }}>
-                            <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "8px" }}>
-                              {generatingHabitId === habit.id ? "Generating your plan..." : "Processing..."}
-                            </p>
-                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", fontFamily: "monospace", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-                              {generationText[habit.id] || ""}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Error state */}
-                        {generationError[habit.id] && !habitPlan && (
-                          <div style={{ padding: "12px 14px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)" }}>Plan generation failed.</p>
-                            <button
-                              onClick={() => { setGenerationError((prev) => { const n = { ...prev }; delete n[habit.id]; return n; }); handleGeneratePlan(habit.id); }}
-                              disabled={generatingHabitId === habit.id}
-                              style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer" }}
-                            >
-                              Retry
-                            </button>
-                          </div>
-                        )}
-
-                        {/* This week's focus */}
-                        {currentWeek && (
-                          <div style={{ padding: "12px 14px", background: "var(--accent)", borderRadius: "8px" }}>
-                            <p style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)", marginBottom: "4px" }}>Week {currentWeek.week} of 4 — {currentWeek.focus}</p>
-                            <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#fff" }}>{currentWeek.target}</p>
-                          </div>
-                        )}
-
-                        {/* Core Philosophy */}
-                        {philosophy && (
-                          <div>
-                            <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "6px" }}>Core Philosophy</p>
-                            <p style={{ fontSize: "0.875rem", fontStyle: "italic", color: "var(--foreground-muted)" }}>{philosophy}</p>
-                          </div>
-                        )}
-
-                        {/* Action Steps */}
-                        {(steps?.length ?? 0) > 0 && (
-                          <div>
-                            <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--foreground-muted)", marginBottom: "10px" }}>Action Steps</p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                              {steps!.map((step, i) => (
-                                <div key={i} style={{ display: "flex", gap: "10px" }}>
-                                  <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "var(--foreground)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, flexShrink: 0, marginTop: "2px" }}>{i + 1}</span>
-                                  <div>
-                                    <p style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "2px" }}>{step.step}</p>
-                                    <p style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>{step.description}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Weekly Roadmap */}
-                        {(roadmap?.length ?? 0) > 0 && (
-                          <div>
-                            <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--foreground-muted)", marginBottom: "10px" }}>4-Week Roadmap</p>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                              {roadmap!.map((week) => (
-                                <div key={week.week} style={{ padding: "12px", borderRadius: "8px", background: "var(--background-secondary)", border: "1px solid var(--surface-border)" }}>
-                                  <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--accent)", marginBottom: "2px" }}>Week {week.week}</p>
-                                  <p style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: "2px" }}>{week.focus}</p>
-                                  <p style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>{week.target}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Plan Actions (Refine / Regenerate) */}
-                        {habitPlan && (
-                          <div style={{ borderTop: "1px solid var(--surface-border)", paddingTop: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                            <button
-                              onClick={() => { setRefineHabitId(refineHabitId === habit.id ? null : habit.id); setRefineMessage(""); setRefinedPlan(null); }}
-                              style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: "pointer" }}
-                            >
-                              ✏️ Refine your plan
-                            </button>
-                            <button
-                              onClick={() => setShowRegenerateConfirm(habit.id)}
-                              disabled={generatingHabitId === habit.id}
-                              style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: generatingHabitId === habit.id ? "not-allowed" : "pointer", opacity: generatingHabitId === habit.id ? 0.6 : 1 }}
-                            >
-                              {generatingHabitId === habit.id ? "Generating..." : "🔄 Refresh plan"}
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Regenerate confirmation dialog */}
-                        {showRegenerateConfirm === habit.id && (
-                          <div style={{ padding: "12px 14px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)" }}>
-                            <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", marginBottom: "10px" }}>
-                              This will replace your current plan. Continue?
-                            </p>
-                            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                              <button onClick={() => setShowRegenerateConfirm(null)} style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: "pointer" }}>
-                                Cancel
-                              </button>
-                              <button onClick={() => handleRegeneratePlan(habit.id)} style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer" }}>
-                                Replace Plan
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Refine UI */}
-                        {refineHabitId === habit.id && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                            <textarea
-                              value={refineMessage}
-                              onChange={(e) => setRefineMessage(e.target.value)}
-                              placeholder="Tell me how to adjust it..."
-                              rows={2}
-                              style={{ width: "100%", padding: "10px 12px", fontSize: "0.875rem", borderRadius: "8px", border: "1.5px solid var(--surface-border)", background: "var(--background-secondary)", color: "var(--foreground)", outline: "none", resize: "vertical", boxSizing: "border-box" }}
-                            />
-                            {!refinedPlan && (
-                              <button
-                                onClick={handleRefinePlan}
-                                disabled={refineStreaming || !refineMessage.trim()}
-                                style={{ alignSelf: "flex-end", fontSize: "0.75rem", fontWeight: 700, padding: "8px 20px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: refineStreaming || !refineMessage.trim() ? "not-allowed" : "pointer", opacity: refineStreaming || !refineMessage.trim() ? 0.6 : 1 }}
-                              >
-                                {refineStreaming ? "Refining..." : "Refine →"}
-                              </button>
-                            )}
-                            {refinedPlan && (
-                              <div style={{ padding: "10px 12px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)" }}>
-                                <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "6px" }}>Revised Plan Preview</p>
-                                <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", fontStyle: "italic", marginBottom: "10px" }}>
-                                  {(refinedPlan as { corePhilosophy?: string }).corePhilosophy || "Plan revised."}
-                                </p>
-                                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                                  <button onClick={() => { setRefinedPlan(null); setRefineMessage(""); }} style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: "pointer" }}>Discard</button>
-                                  <button onClick={handleApprovePlan} style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer" }}>Approve ✓</button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                {/* Inline generation progress — shown while streaming for this habit */}
+                {(generatingHabitId === habit.id || generationText[habit.id] || generationError[habit.id]) && !habitPlan && (
+                  <div style={{ paddingLeft: "46px", paddingBottom: "12px", borderBottom: "1px solid var(--surface-border)" }}>
+                    {(generatingHabitId === habit.id || generationText[habit.id]) && (
+                      <div style={{ padding: "12px 14px", background: "rgba(217,119,6,0.06)", borderRadius: "8px", border: "1px solid rgba(217,119,6,0.2)", marginBottom: "8px" }}>
+                        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "6px" }}>
+                          {generatingHabitId === habit.id ? "Generating your plan..." : "Saving..."}
+                        </p>
+                        <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", fontFamily: "monospace", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                          {generationText[habit.id] || ""}
+                        </p>
                       </div>
                     )}
-                  </>
+                    {generationError[habit.id] && (
+                      <div style={{ padding: "12px 14px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)" }}>Plan generation failed.</p>
+                        <button
+                          onClick={() => { setGenerationError((prev) => { const n = { ...prev }; delete n[habit.id]; return n; }); handleGeneratePlan(habit.id); }}
+                          disabled={generatingHabitId === habit.id}
+                          style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer" }}
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Your Plan nav link — shown when habit has a saved plan */}
+                {!!habitPlan && (
+                  <button
+                    onClick={() => router.push(`/habit/${habit.id}`)}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0 8px 46px", background: "none", border: "none", borderBottom: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)" }}
+                  >
+                    <span>✨ Your Plan</span>
+                    <span style={{ fontSize: "1rem" }}>›</span>
+                  </button>
                 )}
               </div>
             );
