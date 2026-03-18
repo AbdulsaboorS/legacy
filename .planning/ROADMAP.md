@@ -85,11 +85,22 @@ Plans:
 - [ ] 04-02-PLAN.md — CircleFeed component + wire into CircleDetailClient + notification dots in HalaqaClient
 
 ### Phase 5: Web App Flow Polish
-**Goal**: Every web screen is complete and feels production-ready. Tab navigation is fast. Streak sharing and join page are finalized.
+**Goal**: Join page is redesigned to match the editorial design system, AI copy is rebranded to human-feeling language, and circles have an optional description field surfaced across the app.
 **Owner**: Full-stack
 **Depends on**: Phase 4
-**Success Criteria**: TBD
-**Plans**: TBD
+**Success Criteria**:
+  1. Join page uses inline styles, Cormorant Garamond serif heading, "Join {CircleName}" CTA, and routes to /halaqa/[id] post-join.
+  2. No user-facing "AI" labels on habit cards — personalized copy throughout.
+  3. Circles have an optional 150-char description shown on detail page, My Circles cards, and join page.
+  4. Circle owner can add/edit description inline from the detail page.
+  5. npm run build passes with zero new errors.
+**Plans**: 4 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Supabase migration (halaqas.description) + Halaqa TypeScript interface update
+- [ ] 05-02-PLAN.md — Join page visual redesign + routing fix + generateMetadata SEO
+- [ ] 05-03-PLAN.md — AI copy rebrand in DashboardClient (5 string replacements)
+- [ ] 05-04-PLAN.md — Circle description surfaces: Create modal, My Circles cards, detail header + owner edit, join page
 
 ### Phase 6: Mobile App
 **Goal**: Legacy ships on iOS App Store and Google Play via Capacitor + Codemagic CI.
@@ -124,6 +135,7 @@ Plans:
 | 1. Circles UI | ✓ Complete | Both plans done, human verified |
 | 2. AI + Web Flow | ✓ Complete | 2026-03-16 |
 | 3. AI Plan Generation | ✓ Complete | 2026-03-17 |
-| 4. Live Circle Feed | 2/2 | Complete   | 2026-03-17 | 5. Web App Flow Polish | Not started | |
+| 4. Live Circle Feed | ✓ Complete | 2026-03-17 |
+| 5. Web App Flow Polish | Not started | 4 plans ready |
 | 6. Mobile App | Not started | Packages + bundle ID done |
 | 7. Push Notifications + Launch | Not started | Migrations + packages done |
