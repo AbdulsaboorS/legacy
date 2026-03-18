@@ -102,6 +102,16 @@ Plans:
 - [ ] 05-03-PLAN.md — AI copy rebrand in DashboardClient (5 string replacements)
 - [ ] 05-04-PLAN.md — Circle description surfaces: Create modal, My Circles cards, detail header + owner edit, join page
 
+### Phase 05.1: Habit Detail Page (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 5
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 05.1 to break down)
+
 ### Phase 6: Mobile App
 **Goal**: Legacy ships on iOS App Store and Google Play via Capacitor + Codemagic CI.
 **Owner**: Full-stack

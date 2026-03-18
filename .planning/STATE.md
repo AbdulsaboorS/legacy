@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05-04-PLAN.md
+stopped_at: Phase 5 complete. Phase 5.1 (Habit Detail Page) inserted — ready to discuss and plan
 last_updated: "2026-03-18T22:32:20.425Z"
 progress:
   total_phases: 7
@@ -62,6 +62,10 @@ Progress: [████░░░░░░] 57%
 | Phase 05-web-app-flow-polish P04 | 8min | 2 tasks | 3 files |
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 05.1 inserted after Phase 5: Habit Detail Page — move plan content off dashboard into dedicated /habit/[id] page (INSERTED)
 
 ### Decisions
 
