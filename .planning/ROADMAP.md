@@ -104,13 +104,14 @@ Plans:
 
 ### Phase 05.1: Habit Detail Page (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Move AI plan content off the dashboard into a dedicated /habit/[id] page — dashboard becomes a pure check-in list, detail page owns all plan depth (heatmap, plan content, refine, regenerate).
+**Requirements**: N/A
 **Depends on:** Phase 5
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 05.1 to break down)
+- [ ] 05.1-01-PLAN.md — Create /habit/[id] route with HabitDetailClient: heatmap, plan content, refine/regenerate UI
+- [ ] 05.1-02-PLAN.md — Clean DashboardClient: remove inline plan section, wire "Your Plan ›" nav row
 
 ### Phase 6: Mobile App
 **Goal**: Legacy ships on iOS App Store and Google Play via Capacitor + Codemagic CI.
