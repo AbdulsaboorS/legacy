@@ -522,7 +522,7 @@ export default function DashboardClient() {
                       onClick={() => { setExpandedMasterplan(habit.id); handleGeneratePlan(habit.id); }}
                       style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", padding: "5px 14px", borderRadius: "999px", background: "rgba(217,119,6,0.1)", border: "1px solid rgba(217,119,6,0.3)", color: "var(--accent)", cursor: "pointer" }}
                     >
-                      ✨ Generate AI Plan
+                      ✨ Want a personalized plan?
                     </button>
                   </div>
                 )}
@@ -534,7 +534,7 @@ export default function DashboardClient() {
                       onClick={() => setExpandedMasterplan(isMasterplanOpen ? null : habit.id)}
                       style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0 8px 46px", background: "none", border: "none", borderBottom: "1px solid var(--surface-border)", cursor: "pointer", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)" }}
                     >
-                      <span>✨ AI Masterplan</span>
+                      <span>✨ Your Plan</span>
                       <span style={{ display: "inline-block", transform: isMasterplanOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▾</span>
                     </button>
 
@@ -626,14 +626,14 @@ export default function DashboardClient() {
                               onClick={() => { setRefineHabitId(refineHabitId === habit.id ? null : habit.id); setRefineMessage(""); setRefinedPlan(null); }}
                               style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: "pointer" }}
                             >
-                              ✏️ Refine Plan
+                              ✏️ Refine your plan
                             </button>
                             <button
                               onClick={() => setShowRegenerateConfirm(habit.id)}
                               disabled={generatingHabitId === habit.id}
                               style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: generatingHabitId === habit.id ? "not-allowed" : "pointer", opacity: generatingHabitId === habit.id ? 0.6 : 1 }}
                             >
-                              {generatingHabitId === habit.id ? "Generating..." : "🔄 Regenerate"}
+                              {generatingHabitId === habit.id ? "Generating..." : "🔄 Refresh plan"}
                             </button>
                           </div>
                         )}
@@ -661,7 +661,7 @@ export default function DashboardClient() {
                             <textarea
                               value={refineMessage}
                               onChange={(e) => setRefineMessage(e.target.value)}
-                              placeholder="e.g. make it less intense, add more Sunnah context..."
+                              placeholder="Tell me how to adjust it..."
                               rows={2}
                               style={{ width: "100%", padding: "10px 12px", fontSize: "0.875rem", borderRadius: "8px", border: "1.5px solid var(--surface-border)", background: "var(--background-secondary)", color: "var(--foreground)", outline: "none", resize: "vertical", boxSizing: "border-box" }}
                             />
