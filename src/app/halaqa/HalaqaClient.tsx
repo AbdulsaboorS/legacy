@@ -106,6 +106,7 @@ export default function HalaqaClient() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newCircleName, setNewCircleName] = useState("");
+  const [newCircleDescription, setNewCircleDescription] = useState("");
   const [dotCircles, setDotCircles] = useState<Set<string>>(new Set());
 
   const today = new Date().toISOString().split("T")[0];
@@ -194,7 +195,7 @@ export default function HalaqaClient() {
       myHalaqas.map(async (halaqa) => {
         const { data: memberRows } = await supabase
           .from("halaqa_members")
-          .select("user_id, profiles(preferred_name)")
+          .select("user_id")
           .eq("halaqa_id", halaqa.id);
 
         // Handle RLS propagation delay for newly created circles
@@ -209,6 +210,15 @@ export default function HalaqaClient() {
 
         const memberUserIds = memberRows.map((m) => m.user_id);
 
+        // Fetch profiles separately (no direct FK from halaqa_members → profiles)
+        const { data: profileRows } = await supabase
+          .from("profiles")
+          .select("id, preferred_name")
+          .in("id", memberUserIds);
+        const profileMap = new Map(
+          (profileRows ?? []).map((p) => [p.id, p.preferred_name as string])
+        );
+
         const { data: logs } = await supabase
           .from("habit_logs")
           .select("user_id")
@@ -218,10 +228,10 @@ export default function HalaqaClient() {
 
         const doneCount = new Set(logs?.map((r) => r.user_id)).size;
 
-        const memberPreviews = memberRows
-          .map((m) => {
-            const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
-            return profile ? { preferred_name: (profile as { preferred_name: string }).preferred_name } : null;
+        const memberPreviews = memberUserIds
+          .map((uid) => {
+            const name = profileMap.get(uid);
+            return name ? { preferred_name: name } : null;
           })
           .filter((p): p is { preferred_name: string } => p !== null);
 
@@ -311,6 +321,14 @@ export default function HalaqaClient() {
 
       if (halaqaError) throw halaqaError;
 
+      // Save description separately (RPC doesn't accept description param)
+      if (newCircleDescription.trim() && newHalaqaId) {
+        await supabase
+          .from("halaqas")
+          .update({ description: newCircleDescription.trim() })
+          .eq("id", newHalaqaId);
+      }
+
       // Construct the halaqa object locally — don't fetch from DB since RLS
       // on halaqas has a recursive dependency through halaqa_members that
       // prevents reading the row immediately after creation
@@ -323,6 +341,7 @@ export default function HalaqaClient() {
         max_members: 8,
         created_by: user.id,
         created_at: new Date().toISOString(),
+        description: newCircleDescription.trim() || null,
       };
       setMyHalaqas((prev) =>
         prev.find((h) => h.id === newHalaqaId) ? prev : [...prev, newHalaqa]
@@ -337,6 +356,7 @@ export default function HalaqaClient() {
       toast.error("Failed to create circle. Please try again.");
     } finally {
       setNewCircleName("");
+      setNewCircleDescription("");
       setCreating(false);
     }
   };
@@ -646,6 +666,20 @@ export default function HalaqaClient() {
                     >
                       {card.halaqa.name}
                     </p>
+                    {card.halaqa.description && (
+                      <p
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "var(--foreground-muted)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          marginTop: "2px",
+                        }}
+                      >
+                        {card.halaqa.description}
+                      </p>
+                    )}
                     <p style={{ fontSize: "0.75rem", color: "var(--foreground-muted)" }}>
                       {card.doneCount}/{card.memberCount} done today
                     </p>
@@ -737,11 +771,49 @@ export default function HalaqaClient() {
               onKeyDown={(e) => e.key === "Enter" && createPrivateGroup()}
               autoFocus
             />
+            {/* Optional description */}
+            <div style={{ marginTop: "0px", marginBottom: "16px" }}>
+              <textarea
+                placeholder="Circle vibe or purpose — 1-2 sentences"
+                value={newCircleDescription}
+                onChange={(e) => setNewCircleDescription(e.target.value)}
+                maxLength={160}
+                rows={2}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border, rgba(0,0,0,0.1))",
+                  background: "var(--surface, rgba(0,0,0,0.03))",
+                  color: "var(--foreground)",
+                  fontSize: "0.875rem",
+                  resize: "none",
+                  fontFamily: "inherit",
+                  boxSizing: "border-box",
+                }}
+              />
+              <p
+                style={{
+                  textAlign: "right",
+                  fontSize: "0.7rem",
+                  marginTop: "4px",
+                  color:
+                    150 - newCircleDescription.length < 0
+                      ? "#EF4444"
+                      : 150 - newCircleDescription.length < 20
+                      ? "var(--accent)"
+                      : "var(--foreground-muted)",
+                }}
+              >
+                {150 - newCircleDescription.length} remaining
+              </p>
+            </div>
             <div style={{ display: "flex", gap: "12px" }}>
               <button
                 onClick={() => {
                   setShowCreateModal(false);
                   setNewCircleName("");
+                  setNewCircleDescription("");
                 }}
                 style={{
                   flex: 1,
