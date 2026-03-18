@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-03-18T22:23:04.608Z"
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-03-18T22:28:51.382Z"
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 13
-  completed_plans: 12
+  completed_plans: 13
   percent: 57
 ---
 
@@ -59,6 +59,7 @@ Progress: [████░░░░░░] 57%
 | Phase 05-web-app-flow-polish P01 | 36s | 2 tasks | 2 files |
 | Phase 05-web-app-flow-polish P02 | 1min | 2 tasks | 2 files |
 | Phase 05-web-app-flow-polish P03 | 3min | 1 tasks | 1 files |
+| Phase 05-web-app-flow-polish P04 | 8min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 05-web-app-flow-polish]: Idempotent DO $$ block for RLS policy creation — skips silently if 'Owner can update halaqa' already exists
 - [Phase 05-web-app-flow-polish]: generateMetadata queries halaqas by invite_code using server Supabase client; falls back to 'Legacy Circle'
 - [Phase 05-web-app-flow-polish]: Join page CTA uses template literal Join ${halaqaInfo?.name} for personalization; post-join redirect fixed to /halaqa/[id]
+- [Phase 05-web-app-flow-polish]: Description saved via separate .update() after create_private_halaqa RPC — RPC signature unchanged
+- [Phase 05-web-app-flow-polish]: Optimistic description save in CircleDetailClient — local setHalaqa update, no DB refetch needed
 
 ### Pending Todos
 
@@ -107,8 +110,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T22:23:04.606Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-03-18T22:28:51.380Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None
 
 ## MCP Setup
