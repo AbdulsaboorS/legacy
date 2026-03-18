@@ -3,15 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Phase 4 built + verified at code level — awaiting human verify via seed data test
-last_updated: "2026-03-18T00:00:00.000Z"
-last_activity: 2026-03-18 — Built live circle feed (CircleFeed, get_circle_feed RPC, reactions, notification dots)
+stopped_at: Phase 5 context gathered
+last_updated: "2026-03-18T22:00:07.652Z"
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 9
   completed_plans: 9
-  percent: 20
+  percent: 57
 ---
 
 # Project State
@@ -21,14 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** A Muslim opens Legacy daily, logs habits, sees their circle doing the same, and feels Ramadan's momentum carried forward.
-**Current focus:** Phase 4 — Live Circle Feed
+**Current focus:** Phase 5 — Web App Flow Polish
 
 ## Current Position
 
-Phase: 4 of 7 (Live Circle Feed) — BUILT, AWAITING HUMAN VERIFY
-Status: 13/13 automated checks passed. Seed data test required — use Supabase MCP to get halaqa_id + habit_ids, insert fake member + logs, verify all 3 feed item types render, then approve to mark Phase 4 complete.
-Next action: `/gsd:resume-work` → seed test → approve → Phase 5 (Web App Flow Polish)
-Last activity: 2026-03-18 — CircleFeed.tsx (554 lines), get_circle_feed RPC, habit_log_id FK, notification dots
+Phase: 4 of 7 COMPLETE ✓ — next up: Phase 5 (Web App Flow Polish)
+Status: Phase 4 human verified. Feed shows log/milestone/joined cards, reactions work, member board correct.
+Next action: `/gsd:plan-phase 5`
 
 Progress: [████░░░░░░] 57%
 
@@ -93,19 +91,19 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- **[Phase 4 verify]** Use Supabase MCP to query halaqa_id + habit_ids → run seed script → test feed renders log/milestone/joined items → approve human verify → mark Phase 4 complete
+None.
 
 ### Blockers/Concerns
 
-- **Phase 4 human verify pending** — seed data test required before marking complete
-- **Supabase migrations possibly unapplied**: `20260315_phase3_backend.sql` (recalculate_streak + send_halaqa_reaction RPCs), `20260315_phase3_mobile.sql` (device_tokens) — verify with MCP next session
 - Push notifications (Phase 7): remaining work is `src/lib/push.ts`, `/api/push/register`, cron routes, FIREBASE env vars
+- **RLS note (resolved this session)**: Fixed circular dependency between halaqas↔halaqa_members via SECURITY DEFINER `get_user_halaqa_ids()`. Also added peer-read policies on habit_logs, streaks, habits for circle members.
+- **get_circle_feed bug (resolved)**: ambiguous `user_id` column ref + `MIN(uuid)` both fixed in migration.
 
 ## Session Continuity
 
-Last session: 2026-03-18
-Stopped at: Phase 4 built, migration applied, awaiting seed data test + human verify
-Resume file: None
+Last session: 2026-03-18T22:00:07.643Z
+Stopped at: Phase 5 context gathered
+Resume file: .planning/phases/05-web-app-flow-polish/05-CONTEXT.md
 
 ## MCP Setup
 
