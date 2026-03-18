@@ -67,12 +67,23 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
       return;
     }
 
-    router.push("/halaqa");
+    router.push(`/halaqa/${halaqaInfo.id}`);
   };
 
   if (loading) {
     return (
-      <main className="min-h-dvh flex items-center justify-center p-6 text-center relative" style={{ background: "var(--background)" }}>
+      <main
+        style={{
+          background: "var(--background)",
+          minHeight: "100dvh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          textAlign: "center",
+          position: "relative",
+        }}
+      >
         <div className="relative animate-pulse-soft">
           <div className="text-4xl mb-4 animate-float">🔍</div>
           <p style={{ color: "var(--foreground-muted)" }}>Finding circle...</p>
@@ -83,17 +94,44 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
 
   if (error) {
     return (
-      <main className="min-h-dvh flex flex-col items-center justify-center p-6 text-center relative" style={{ background: "var(--background)" }}>
+      <main
+        style={{
+          background: "var(--background)",
+          minHeight: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+          textAlign: "center",
+          position: "relative",
+        }}
+      >
         <div
-          className="glass relative max-w-sm w-full p-8 animate-bounce-in"
-          style={{ borderRadius: "var(--radius-xl)" }}
+          className="glass relative animate-bounce-in"
+          style={{
+            borderRadius: "var(--radius-xl)",
+            maxWidth: "384px",
+            width: "100%",
+            padding: "32px",
+          }}
         >
           <div className="text-4xl mb-4">⚠️</div>
           <h1 className="text-xl font-bold mb-2">Circle Not Found</h1>
-          <p className="text-sm mb-6" style={{ color: "var(--foreground-muted)" }}>
+          <p
+            style={{
+              fontSize: "0.875rem",
+              marginBottom: "24px",
+              color: "var(--foreground-muted)",
+            }}
+          >
             {error}
           </p>
-          <button onClick={() => router.push("/halaqa")} className="btn btn-primary w-full">
+          <button
+            onClick={() => router.push("/halaqa")}
+            className="btn btn-primary"
+            style={{ width: "100%" }}
+          >
             Go to Halaqas
           </button>
         </div>
@@ -104,34 +142,75 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
   const isFull = halaqaInfo && halaqaInfo.member_count >= halaqaInfo.max_members;
 
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center p-6 relative" style={{ background: "var(--background)" }}>
+    <main
+      style={{
+        background: "var(--background)",
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        position: "relative",
+      }}
+    >
       <div
-        className="glass relative max-w-sm w-full p-8 text-center animate-bounce-in"
-        style={{ borderRadius: "var(--radius-xl)" }}
+        className="glass relative animate-bounce-in"
+        style={{
+          borderRadius: "var(--radius-xl)",
+          maxWidth: "384px",
+          width: "100%",
+          padding: "32px",
+          textAlign: "center",
+        }}
       >
         <p
-          className="text-xs uppercase tracking-widest mb-2"
-          style={{ color: "var(--foreground-muted)" }}
+          style={{
+            fontSize: "0.7rem",
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
+            marginBottom: "8px",
+            color: "var(--foreground-muted)",
+          }}
         >
           You&apos;ve been invited to
         </p>
         <h1
-          className="text-2xl font-bold mb-2"
-          style={{ color: "var(--foreground)" }}
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 400,
+            fontSize: "2.4rem",
+            lineHeight: 1.1,
+            color: "var(--foreground)",
+            marginBottom: "12px",
+            letterSpacing: "-0.01em",
+          }}
         >
           {halaqaInfo?.name}
         </h1>
 
         {/* Amber divider */}
         <div
-          className="h-px w-16 mx-auto mb-4"
-          style={{ background: "var(--accent)" }}
+          style={{
+            height: "2px",
+            width: "56px",
+            margin: "0 auto 20px",
+            background: "var(--accent)",
+            borderRadius: "2px",
+          }}
         />
 
         {/* Capacity pill */}
         <div
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium mb-6"
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "6px 12px",
+            borderRadius: "999px",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            marginBottom: "24px",
             background: "rgba(217, 119, 6, 0.10)",
             color: "var(--accent)",
             border: "1px solid rgba(217, 119, 6, 0.25)",
@@ -143,8 +222,12 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
 
         {isFull ? (
           <div
-            className="p-4 rounded-xl text-sm font-medium mb-4"
             style={{
+              padding: "16px",
+              borderRadius: "12px",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              marginBottom: "16px",
               background: "rgba(239, 68, 68, 0.1)",
               color: "#EF4444",
               border: "1px solid rgba(239, 68, 68, 0.2)",
@@ -156,16 +239,26 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
           <button
             onClick={handleJoin}
             disabled={joining}
-            className="btn btn-accent w-full text-base mb-3 shadow-lg"
+            className="btn btn-accent"
+            style={{
+              width: "100%",
+              fontSize: "1rem",
+              marginBottom: "12px",
+              boxShadow: "0 4px 12px rgba(217, 119, 6, 0.3)",
+            }}
           >
-            {joining ? "Joining..." : "Accept Invite 🤝"}
+            {joining ? "Joining..." : `Join ${halaqaInfo?.name}`}
           </button>
         )}
 
         <button
           onClick={() => router.push("/halaqa")}
-          className="btn btn-ghost text-sm w-full"
-          style={{ color: "var(--foreground-muted)" }}
+          className="btn btn-ghost"
+          style={{
+            width: "100%",
+            fontSize: "0.875rem",
+            color: "var(--foreground-muted)",
+          }}
         >
           Cancel
         </button>
