@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-live-circle-feed-04-02-PLAN.md
-last_updated: "2026-03-17T23:27:23.503Z"
-last_activity: 2026-03-17 — Streaming generation UX, no-polling dashboard, Gemini model fix
+stopped_at: Phase 4 built + verified at code level — awaiting human verify via seed data test
+last_updated: "2026-03-18T00:00:00.000Z"
+last_activity: 2026-03-18 — Built live circle feed (CircleFeed, get_circle_feed RPC, reactions, notification dots)
 progress:
   total_phases: 7
   completed_phases: 4
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ## Current Position
 
-Phase: 3 of 7 (AI Plan Generation) — COMPLETE ✓
-Phase: 4 next (Live Circle Feed — real-time activity feed, reactions on feed items, notification dots)
-Status: Phase 3 verified ✓. Next session: plan and execute Phase 4.
-Last activity: 2026-03-17 — Streaming generation UX, no-polling dashboard, Gemini model fix
+Phase: 4 of 7 (Live Circle Feed) — BUILT, AWAITING HUMAN VERIFY
+Status: 13/13 automated checks passed. Seed data test required — use Supabase MCP to get halaqa_id + habit_ids, insert fake member + logs, verify all 3 feed item types render, then approve to mark Phase 4 complete.
+Next action: `/gsd:resume-work` → seed test → approve → Phase 5 (Web App Flow Polish)
+Last activity: 2026-03-18 — CircleFeed.tsx (554 lines), get_circle_feed RPC, habit_log_id FK, notification dots
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 57%
 
 ## Performance Metrics
 
@@ -93,16 +93,22 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- **[Phase 4 verify]** Use Supabase MCP to query halaqa_id + habit_ids → run seed script → test feed renders log/milestone/joined items → approve human verify → mark Phase 4 complete
 
 ### Blockers/Concerns
 
-- **Supabase migrations**: 3 migrations need to be applied manually — `20260315_phase3_backend.sql`, `20260315_phase3_mobile.sql`, `20260316_habit_plans.sql`. habit_plans was applied this session (user confirmed). Other two may not be applied yet.
-- Push notifications: `device_tokens` schema and RPCs are ready. Remaining: `src/lib/push.ts`, `/api/push/register`, cron routes, FIREBASE env vars.
-- RLS on `halaqa_members`: recursive dependency resolved via sessionStorage pendingHalaqa pattern — already handled in Phase 1.
+- **Phase 4 human verify pending** — seed data test required before marking complete
+- **Supabase migrations possibly unapplied**: `20260315_phase3_backend.sql` (recalculate_streak + send_halaqa_reaction RPCs), `20260315_phase3_mobile.sql` (device_tokens) — verify with MCP next session
+- Push notifications (Phase 7): remaining work is `src/lib/push.ts`, `/api/push/register`, cron routes, FIREBASE env vars
 
 ## Session Continuity
 
-Last session: 2026-03-17T23:27:23.501Z
-Stopped at: Completed 04-live-circle-feed-04-02-PLAN.md
+Last session: 2026-03-18
+Stopped at: Phase 4 built, migration applied, awaiting seed data test + human verify
 Resume file: None
+
+## MCP Setup
+
+Supabase MCP configured in `.mcp.json` (project-scoped).
+**Next session:** run `claude /mcp` in a regular terminal (not IDE) to authenticate FIRST, then MCP tools are available.
+Project ref: czlfzfuqilvdpdpqnaso
