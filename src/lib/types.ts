@@ -70,6 +70,7 @@ export interface Halaqa {
   is_public: boolean;
   max_members: number;
   created_at: string;
+  description?: string | null;   // NEW — Phase 5, max 150 chars
 }
 
 export interface HalaqaMember {
