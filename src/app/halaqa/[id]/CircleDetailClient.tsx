@@ -90,6 +90,8 @@ export default function CircleDetailClient() {
   const [doneCount, setDoneCount] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [draftDescription, setDraftDescription] = useState("");
 
   const loadData = useCallback(async () => {
     const supabase = createClient();
@@ -150,10 +152,10 @@ export default function CircleDetailClient() {
     const loggedToday = (logCount || 0) > 0;
     setHasLoggedToday(loggedToday);
 
-    // 3. Load member user_ids + names
+    // 3. Load member user_ids
     const { data: memberRows } = await supabase
       .from("halaqa_members")
-      .select("user_id, profiles(preferred_name)")
+      .select("user_id")
       .eq("halaqa_id", halaqaId);
 
     if (!memberRows || memberRows.length === 0) {
@@ -161,13 +163,20 @@ export default function CircleDetailClient() {
       return;
     }
 
-    type MemberRow = {
-      user_id: string;
-      profiles: { preferred_name: string } | null;
-    };
-    const typedMemberRows = memberRows as unknown as MemberRow[];
-    const userIds = typedMemberRows.map((m) => m.user_id);
+    const userIds = memberRows.map((m) => m.user_id);
     setMemberCount(userIds.length);
+
+    // 3b. Load profiles separately (no direct FK from halaqa_members → profiles)
+    const { data: profileRows } = await supabase
+      .from("profiles")
+      .select("id, preferred_name")
+      .in("id", userIds);
+    const profileMap = new Map(
+      (profileRows ?? []).map((p) => [p.id, p.preferred_name])
+    );
+
+    type MemberRow = { user_id: string };
+    const typedMemberRows = memberRows as unknown as MemberRow[];
 
     // 4. Load streaks
     const { data: streaksData } = await supabase
@@ -227,7 +236,7 @@ export default function CircleDetailClient() {
     // 7. Build member list, sorted: completed first, then by streak desc
     const memberDetails: MemberDetail[] = typedMemberRows.map((m) => ({
       user_id: m.user_id,
-      preferred_name: m.profiles?.preferred_name ?? "Member",
+      preferred_name: profileMap.get(m.user_id) ?? "Member",
       completed_today: doneUserIds.has(m.user_id),
       current_streak: streakMap.get(m.user_id) ?? 0,
       todayHabits: habitsByUser.get(m.user_id) ?? [],
@@ -245,6 +254,21 @@ export default function CircleDetailClient() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
+
+  const isOwner = currentUserId !== "" && currentUserId === halaqa?.created_by;
+
+  const saveDescription = async () => {
+    if (!halaqa) return;
+    const supabase = createClient();
+    await supabase
+      .from("halaqas")
+      .update({ description: draftDescription.trim() || null })
+      .eq("id", halaqa.id);
+    setHalaqa((prev) =>
+      prev ? { ...prev, description: draftDescription.trim() || null } : prev
+    );
+    setEditingDescription(false);
+  };
 
   const copyInviteLink = async () => {
     if (!halaqa) return;
@@ -326,6 +350,148 @@ export default function CircleDetailClient() {
         >
           {halaqa?.name}
         </h1>
+
+        {/* Description — display mode */}
+        {halaqa?.description && !editingDescription && (
+          <p
+            style={{
+              fontStyle: "italic",
+              color: "var(--foreground-muted)",
+              fontSize: "0.9rem",
+              marginBottom: "16px",
+              lineHeight: 1.55,
+            }}
+          >
+            {halaqa.description}
+          </p>
+        )}
+
+        {/* Owner "Add a vibe" CTA — only when description absent */}
+        {!halaqa?.description && isOwner && !editingDescription && (
+          <button
+            onClick={() => {
+              setDraftDescription("");
+              setEditingDescription(true);
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.75rem",
+              color: "var(--foreground-muted)",
+              textDecoration: "underline",
+              marginBottom: "16px",
+              padding: 0,
+              display: "block",
+            }}
+          >
+            + Add a vibe
+          </button>
+        )}
+
+        {/* Owner inline edit state */}
+        {isOwner && editingDescription && (
+          <div style={{ marginBottom: "16px" }}>
+            <textarea
+              value={draftDescription}
+              onChange={(e) => setDraftDescription(e.target.value)}
+              placeholder="Circle vibe or purpose — 1-2 sentences"
+              rows={2}
+              maxLength={160}
+              autoFocus
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: "8px",
+                border: "1px solid var(--accent)",
+                background: "var(--surface, rgba(0,0,0,0.03))",
+                color: "var(--foreground)",
+                fontSize: "0.875rem",
+                resize: "none",
+                fontFamily: "inherit",
+                boxSizing: "border-box",
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "6px",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "0.7rem",
+                  color:
+                    150 - draftDescription.length < 0
+                      ? "#EF4444"
+                      : 150 - draftDescription.length < 20
+                      ? "var(--accent)"
+                      : "var(--foreground-muted)",
+                }}
+              >
+                {150 - draftDescription.length} remaining
+              </span>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => setEditingDescription(false)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "0.8rem",
+                    color: "var(--foreground-muted)",
+                    padding: "4px 8px",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveDescription}
+                  disabled={150 - draftDescription.length < 0}
+                  style={{
+                    background: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    cursor: 150 - draftDescription.length < 0 ? "not-allowed" : "pointer",
+                    opacity: 150 - draftDescription.length < 0 ? 0.5 : 1,
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    padding: "4px 12px",
+                    borderRadius: "6px",
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Owner edit pencil — when description is present */}
+        {halaqa?.description && isOwner && !editingDescription && (
+          <button
+            onClick={() => {
+              setDraftDescription(halaqa.description ?? "");
+              setEditingDescription(true);
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "0.7rem",
+              color: "var(--foreground-muted)",
+              textDecoration: "underline",
+              marginTop: "-12px",
+              marginBottom: "16px",
+              padding: 0,
+              display: "block",
+            }}
+          >
+            Edit
+          </button>
+        )}
 
         {/* Stats + Invite row */}
         <div

@@ -14,6 +14,7 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
     name: string;
     member_count: number;
     max_members: number;
+    description?: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
 
       const { data: halaqa, error: hError } = await supabase
         .from("halaqas")
-        .select("id, name, max_members, halaqa_members(count)")
+        .select("id, name, max_members, description, halaqa_members(count)")
         .eq("invite_code", inviteCode.toUpperCase())
         .single();
 
@@ -37,6 +38,7 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
         name: halaqa.name,
         member_count: halaqa.halaqa_members[0].count,
         max_members: halaqa.max_members,
+        description: halaqa.description,
       });
       setLoading(false);
     };
@@ -199,6 +201,20 @@ export default function JoinClient({ inviteCode }: { inviteCode: string }) {
             borderRadius: "2px",
           }}
         />
+
+        {halaqaInfo?.description && (
+          <p
+            style={{
+              fontStyle: "italic",
+              color: "var(--foreground-muted)",
+              fontSize: "0.875rem",
+              marginBottom: "16px",
+              lineHeight: 1.5,
+            }}
+          >
+            {halaqaInfo.description}
+          </p>
+        )}
 
         {/* Capacity pill */}
         <div
