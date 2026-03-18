@@ -107,7 +107,7 @@ Plans:
 **Goal:** Move AI plan content off the dashboard into a dedicated /habit/[id] page — dashboard becomes a pure check-in list, detail page owns all plan depth (heatmap, plan content, refine, regenerate).
 **Requirements**: N/A
 **Depends on:** Phase 5
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 05.1-01-PLAN.md — Create /habit/[id] route with HabitDetailClient: heatmap, plan content, refine/regenerate UI
