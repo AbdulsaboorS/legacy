@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 6 planned. 6 plans across 4 waves. Waves 1-3 autonomous, Wave 4 human checkpoints.
-stopped_at: Completed 06-03-PLAN.md (codemagic.yaml)
-last_updated: "2026-03-19T07:11:39.024Z"
+stopped_at: Completed 06-mobile-app-02 (privacy policy page at /privacy)
+last_updated: "2026-03-19T07:12:00.132Z"
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 21
-  completed_plans: 17
+  completed_plans: 18
   percent: 57
 ---
 
@@ -64,6 +64,7 @@ Progress: [████░░░░░░] 57%
 | Phase 05.1-habit-detail-page P02 | 2min 34s | 1 tasks | 1 files |
 | Phase 06-mobile-app P03 | 1min | 1 tasks | 1 files |
 | Phase 06-mobile-app P01 | 56s | 2 tasks | 3 files |
+| Phase 06-mobile-app P02 | 1min 18s | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,10 @@ Recent decisions affecting current work:
 - [Phase 05.1-habit-detail-page]: Inline streaming/error UI moved outside removed masterplan block — generation progress visible during no-plan habit generation on dashboard
 - [Phase 06-mobile-app]: APP_STORE_APPLE_ID stored as Codemagic env var reference not hardcoded — human sets numeric ID after creating App Store listing
 - [Phase 06-mobile-app]: [06-mobile-app]: submit_to_app_store false, submit_to_testflight true — TestFlight-only until human confirms readiness for full release
+- [Phase 06-mobile-app]: capacitor.config.ts: server.url WebView strategy pointing at legacy-bice.vercel.app — preserves Next.js SSR/middleware/API routes intact
+- [Phase 06-mobile-app]: webDir: public (not out) — Capacitor CLI requires existing directory even when server.url overrides at runtime; no static export needed
+- [Phase 06-mobile-app]: Keyboard resize: none — prevents WebView being pushed up by keyboard on iOS onboarding/refine screens
+- [Phase 06-mobile-app]: Privacy page is a server component with no auth — required for App Store reviewers to access without login
 
 ### Mobile App Strategy (Phase 6)
 
@@ -138,8 +143,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T07:11:29.243Z
-Stopped at: Completed 06-03-PLAN.md (codemagic.yaml)
+Last session: 2026-03-19T07:12:00.130Z
+Stopped at: Completed 06-mobile-app-02 (privacy policy page at /privacy)
 Resume file: None
 
 ## MCP Setup
