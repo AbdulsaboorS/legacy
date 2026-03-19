@@ -427,6 +427,7 @@ export default function DashboardClient() {
             const isCompleted = todayLogs[habit.id];
             const habitPlan = habitPlans[habit.id];
             const hasMasterplan = !!habitPlan || generatingHabitId === habit.id || !!generationText[habit.id] || !!generationError[habit.id];
+            const showGeneratePrompt = !habitPlan && !generatingHabitId && !generationText[habit.id] && !generationError[habit.id] && index < 3;
             return (
               <div
                 key={habit.id}
@@ -435,7 +436,7 @@ export default function DashboardClient() {
               >
                 <button
                   onClick={() => toggleHabit(habit.id)}
-                  style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 0", width: "100%", background: "none", border: "none", borderBottom: hasMasterplan ? "none" : "1px solid var(--surface-border)", cursor: "pointer", textAlign: "left" }}
+                  style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 0", width: "100%", background: "none", border: "none", borderBottom: hasMasterplan || showGeneratePrompt ? "none" : "1px solid var(--surface-border)", cursor: "pointer", textAlign: "left" }}
                 >
                   <span style={{ fontSize: "1.3rem", width: "32px", textAlign: "center", flexShrink: 0 }}>{habit.icon}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
