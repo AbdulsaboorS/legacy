@@ -366,3 +366,17 @@ h1, h2, h3 {
   background: var(--accent);
   color: white;
 }
+
+/* ========================================
+   iOS Safe Area Insets (Capacitor)
+   Prevents content from hiding behind
+   notch, Dynamic Island, and home bar.
+   Only takes effect when viewport-fit=cover
+   is set. On web these return 0.
+   ======================================== */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
