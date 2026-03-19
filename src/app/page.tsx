@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
+import { Capacitor } from "@capacitor/core";
 
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
@@ -9,15 +10,24 @@ export default function LandingPage() {
   const handleSignIn = async () => {
     const supabase = createClient();
 
-    let redirectUrl = `${window.location.origin}/auth/callback`;
-    try {
-      const next = sessionStorage.getItem("redirect_after_login");
-      if (next) {
-        redirectUrl += `?next=${encodeURIComponent(next)}`;
-        sessionStorage.removeItem("redirect_after_login");
+    const isNative = Capacitor.isNativePlatform() ||
+      (typeof navigator !== 'undefined' && navigator.userAgent.includes('Capacitor'));
+
+    let redirectUrl = isNative
+      ? 'app.joinlegacy://auth-callback'
+      : `${window.location.origin}/auth/callback`;
+
+    // Keep the existing sessionStorage logic for the web path:
+    if (!isNative) {
+      try {
+        const next = sessionStorage.getItem("redirect_after_login");
+        if (next) {
+          redirectUrl += `?next=${encodeURIComponent(next)}`;
+          sessionStorage.removeItem("redirect_after_login");
+        }
+      } catch (e) {
+        console.error("Session storage error:", e);
       }
-    } catch (e) {
-      console.error("Session storage error:", e);
     }
 
     await supabase.auth.signInWithOAuth({
