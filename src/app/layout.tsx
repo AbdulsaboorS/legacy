@@ -22,7 +22,7 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "Legacy — Keep Your Ramadan Alive",
   description:
-    "Don't let your Ramadan habits die. Legacy helps you transition your spiritual momentum into sustainable daily routines with AI-powered guidance and Prophetic motivation.",
+    "Don't let your Ramadan habits die. Legacy helps you transition your spiritual momentum into sustainable daily routines with personalized plans and Prophetic motivation.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Legacy — Keep Your Ramadan Alive",
     description:
-      "Transform your Ramadan habits into a lasting legacy. AI-powered step-downs, streak tracking, and Prophetic motivation.",
+      "Transform your Ramadan habits into a lasting legacy. Personalized step-down plans, streak tracking, and Prophetic motivation.",
     type: "website",
   },
 };
@@ -71,7 +71,27 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <ToastProvider>
-            {children}
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 100,
+                background: "var(--surface-border)",
+                padding: "6px 16px",
+                textAlign: "center",
+                fontSize: "0.7rem",
+                fontWeight: 500,
+                letterSpacing: "0.05em",
+                color: "var(--foreground-muted)",
+              }}
+            >
+              Legacy is in beta — expect rough edges
+            </div>
+            <div style={{ paddingTop: "29px" }}>
+              {children}
+            </div>
             <BottomNav />
           </ToastProvider>
         </ThemeProvider>

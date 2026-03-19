@@ -113,7 +113,7 @@ export default function LandingPage() {
           }}
         >
           Sustainable spiritual habits built with precision,
-          accountability, and AI-powered guidance.
+          accountability, and personalized plans.
         </p>
 
         {/* Feature tags */}
@@ -126,7 +126,7 @@ export default function LandingPage() {
             marginBottom: "72px",
           }}
         >
-          {["AI Step-Down", "Halaqa Circles", "Streak Sync"].map((f) => (
+          {["Personalized Plans", "Halaqa Circles", "Streak Tracking"].map((f) => (
             <span
               key={f}
               style={{
@@ -182,6 +182,56 @@ export default function LandingPage() {
           >
             — Sahih al-Bukhari
           </span>
+        </div>
+
+        {/* Why I built this */}
+        <div
+          style={{
+            maxWidth: "520px",
+            width: "100%",
+            padding: "24px 32px",
+            background: "var(--background-secondary)",
+            borderRadius: "4px",
+            textAlign: "left",
+            marginBottom: "48px",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "0.7rem",
+              fontWeight: 600,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+              marginBottom: "12px",
+            }}
+          >
+            Why Legacy
+          </p>
+          <p
+            style={{
+              fontSize: "0.95rem",
+              color: "var(--foreground-muted)",
+              lineHeight: 1.75,
+              marginBottom: "16px",
+            }}
+          >
+            Every year after Ramadan, the habits we worked so hard to build slowly fade away.
+            The real test isn&apos;t Ramadan — it&apos;s what comes after, when the shayateen are back.
+            Legacy was built to help you carry what you earned in Ramadan into the rest of your year.
+          </p>
+          <p
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontStyle: "italic",
+              fontSize: "1rem",
+              color: "var(--foreground)",
+              lineHeight: 1.65,
+            }}
+          >
+            The habits you built in Ramadan are proof you can do it outside of Ramadan.
+            Start your legacy — start your journey of consistency.
+          </p>
         </div>
 
         {/* Google sign-in button */}
