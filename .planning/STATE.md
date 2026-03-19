@@ -108,6 +108,20 @@ Recent decisions affecting current work:
 - [Phase 05.1-habit-detail-page]: Your Plan nav row uses !!habitPlan (not hasMasterplan) — only shows for confirmed saved plans, not during streaming
 - [Phase 05.1-habit-detail-page]: Inline streaming/error UI moved outside removed masterplan block — generation progress visible during no-plan habit generation on dashboard
 
+### Mobile App Strategy (Phase 6)
+
+- **iOS only** for v1 — no Android
+- **Approach**: Capacitor WebView pointing at Vercel production URL — no static export, keeps all API routes/middleware/server components
+- **Blocker**: Must deploy to Vercel first — Capacitor WebView needs a live HTTPS URL
+- **Hardest piece**: Google OAuth deep links — custom URL scheme `app.joinlegacy://`, Info.plist entry, `appUrlOpen` listener, Supabase redirect registration
+- **iOS gotchas to fix**: safe area insets (`env(safe-area-inset-*)`), keyboard pushing content (`@capacitor/keyboard`), status bar theme (`@capacitor/status-bar`)
+- **Apple requirements**: Developer account ($99/year), provisioning profile + signing cert, App Store Connect listing, privacy policy page, test credentials in review notes
+- **Review timeline**: Budget 3 days for Apple review, plan for one rejection round
+- **Eid strategy**: Ship PWA for Eid (March 20-21), native iOS as staged launch shortly after
+- **Claude Code can do**: capacitor.config.ts, Info.plist, deep link handler, CSS fixes, Codemagic yaml, privacy policy page, App Store assets
+- **Human must do**: Vercel deploy + env vars, Apple Developer portal setup, Xcode (open project, run on device, archive), App Store Connect form filling, device testing
+- **Vercel MCP**: Worth setting up — lets Claude deploy, check build logs, manage env vars directly. Install via `npx @vercel/mcp` and add to .mcp.json.
+
 ### Pending Todos
 
 None.

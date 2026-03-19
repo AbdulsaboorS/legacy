@@ -114,15 +114,40 @@ Plans:
 - [ ] 05.1-02-PLAN.md — Clean DashboardClient: remove inline plan section, wire "Your Plan ›" nav row
 
 ### Phase 6: Mobile App
-**Goal**: Legacy ships on iOS App Store and Google Play via Capacitor + Codemagic CI.
+**Goal**: Legacy ships on iOS App Store via Capacitor + Codemagic CI. iOS only for v1 — no Android.
 **Owner**: Full-stack
-**Depends on**: Phase 5
+**Depends on**: Phase 5 + Vercel deployment (prerequisite — blocks Capacitor WebView URL)
+**Strategy**: Capacitor WebView pointing at Vercel production URL (Option A). No Next.js static export — keeps API routes, middleware, server components intact.
 **Already done**:
   - @capacitor/core, @capacitor/app, @capacitor/cli installed
   - Bundle ID: `app.joinlegacy`
   - `src/lib/supabase/native.ts` — Capacitor-ready Supabase client
-**Remaining**: capacitor.config.ts, OAuth deep link, Codemagic CI, App Store assets
-**Success Criteria**: TBD
+**Remaining**:
+  - [ ] Deploy to Vercel (user does this — set env vars, connect GitHub repo)
+  - [ ] `capacitor.config.ts` — point WebView at Vercel URL
+  - [ ] `npx cap add ios` — generate iOS project
+  - [ ] Google OAuth deep links — custom URL scheme `app.joinlegacy://` in Info.plist + `appUrlOpen` listener; register scheme in Supabase allowed redirects
+  - [ ] Safe area insets — `env(safe-area-inset-*)` CSS for notch/Dynamic Island/home bar
+  - [ ] `@capacitor/status-bar` — match app theme
+  - [ ] `@capacitor/keyboard` — prevent keyboard from pushing content on refine/onboarding
+  - [ ] Hardware back button handler (iOS swipe back — Capacitor handles via gesture, verify)
+  - [ ] Supabase session persistence test — verify session survives app backgrounding
+  - [ ] Codemagic `codemagic.yaml` — signing, build, upload to App Store Connect
+  - [ ] Privacy policy page at `/privacy` (required for App Store submission)
+  - [ ] App Store Connect listing — screenshots (iPhone 6.9"), description, keywords, age rating
+  - [ ] Test credentials in review notes (Apple reviewers need login without creating account)
+  - [ ] Submit for review (1–3 day Apple review window)
+**Key risks**:
+  - OAuth deep links are the hardest piece — test early
+  - Apple provisioning (certificates, profiles) requires Apple Developer account ($99/year)
+  - App Store review: budget 3 days, plan for one rejection round
+  - Eid deadline (March 20-21): ship PWA for Eid, native app as staged launch shortly after
+**Success Criteria**:
+  1. App installs on real iPhone via TestFlight
+  2. Google OAuth sign-in completes and returns to app (deep link works)
+  3. All screens render correctly — no safe area overflow, keyboard issues
+  4. Session persists after backgrounding and restoring app
+  5. App Store submission accepted, app live on App Store
 **Plans**: TBD
 
 ### Phase 7: Push Notifications + Launch
