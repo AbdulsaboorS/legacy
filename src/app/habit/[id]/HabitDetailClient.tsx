@@ -161,7 +161,14 @@ export default function HabitDetailClient({ habitId }: { habitId: string }) {
         currentPlan: plan,
         refinementMessage: refineMessage,
       });
-      setRefinedPlan(refined);
+      // Normalize: Gemini may return camelCase or snake_case depending on input format.
+      // Save route expects camelCase, so coerce here.
+      const normalized: Record<string, unknown> = {
+        corePhilosophy: refined.corePhilosophy ?? refined.core_philosophy ?? null,
+        actionableSteps: refined.actionableSteps ?? refined.actionable_steps ?? [],
+        weeklyRoadmap: refined.weeklyRoadmap ?? refined.weekly_roadmap ?? [],
+      };
+      setRefinedPlan(normalized);
     } catch { /* ignore */ } finally {
       setRefineStreaming(false);
     }
@@ -417,14 +424,25 @@ export default function HabitDetailClient({ habitId }: { habitId: string }) {
 
                 {/* 5h: Refined plan preview */}
                 {refinedPlan && (
-                  <div style={{ padding: "10px 12px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)" }}>
-                    <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "6px" }}>
+                  <div style={{ padding: "12px 14px", background: "var(--background-secondary)", borderRadius: "8px", border: "1px solid var(--surface-border)" }}>
+                    <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: "10px" }}>
                       Revised Plan Preview
                     </p>
-                    <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", fontStyle: "italic", marginBottom: "10px" }}>
-                      {(refinedPlan as { corePhilosophy?: string }).corePhilosophy || "Plan revised."}
-                    </p>
-                    <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                    {(refinedPlan as { corePhilosophy?: string }).corePhilosophy && (
+                      <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", fontStyle: "italic", marginBottom: "8px", lineHeight: 1.5 }}>
+                        {(refinedPlan as { corePhilosophy?: string }).corePhilosophy}
+                      </p>
+                    )}
+                    {((refinedPlan as { actionableSteps?: { step: string }[] }).actionableSteps ?? []).length > 0 && (
+                      <div style={{ marginBottom: "8px" }}>
+                        {((refinedPlan as { actionableSteps?: { step: string }[] }).actionableSteps ?? []).slice(0, 2).map((s, i) => (
+                          <p key={i} style={{ fontSize: "0.75rem", color: "var(--foreground-muted)", marginBottom: "2px" }}>
+                            {i + 1}. {s.step}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "10px" }}>
                       <button
                         onClick={() => { setRefinedPlan(null); setRefineMessage(""); }}
                         style={{ fontSize: "0.72rem", fontWeight: 700, padding: "6px 14px", borderRadius: "999px", background: "none", border: "1.5px solid var(--surface-border)", color: "var(--foreground-muted)", cursor: "pointer" }}
