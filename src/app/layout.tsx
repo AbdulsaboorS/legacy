@@ -3,6 +3,7 @@ import { Inter, Cormorant_Garamond } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/Toast";
 import { BottomNav } from "@/components/BottomNav";
+import { NativeAuthHandler } from "@/components/NativeAuthHandler";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +72,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <ThemeProvider>
+          <NativeAuthHandler />
           <ToastProvider>
             <div
               style={{
