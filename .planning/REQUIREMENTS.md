@@ -62,6 +62,18 @@ Active requirements for the Eid al-Fitr 2026 launch (March 20-21). Validated fea
 
 **LAUNCH-03**: Error monitoring (Sentry or equivalent) is active in production, capturing unhandled exceptions and surfacing them to the developer.
 
+### MOB — Mobile App (iOS)
+
+**MOB-01**: App installs on real iPhone via TestFlight — the Capacitor WebView loads the Vercel production URL and the app is functional end-to-end on device.
+
+**MOB-02**: Google OAuth sign-in completes and returns to app — the deep link (app.joinlegacy://auth-callback) fires, tokens are extracted, and the user lands on /dashboard authenticated.
+
+**MOB-03**: All screens render correctly — no content hidden behind the iOS notch, Dynamic Island, or home bar; keyboard does not push content off-screen on refine/onboarding screens.
+
+**MOB-04**: Session persists after backgrounding and restoring app — user is not logged out when they switch apps for 1+ minute and return to Legacy.
+
+**MOB-05**: App Store submission accepted and app is live on the App Store — metadata, screenshots, age rating, privacy policy, and test credentials are complete; Apple review passes.
+
 ---
 
 ## Summary
@@ -74,7 +86,8 @@ Active requirements for the Eid al-Fitr 2026 launch (March 20-21). Validated fea
 | JOIN | 2 | JOIN-01, JOIN-02 |
 | PWA | 3 | PWA-01, PWA-02, PWA-03 |
 | LAUNCH | 3 | LAUNCH-01, LAUNCH-02, LAUNCH-03 |
-| **Total** | **15** | |
+| MOB | 5 | MOB-01, MOB-02, MOB-03, MOB-04, MOB-05 |
+| **Total** | **20** | |
 
 ---
 
@@ -102,3 +115,8 @@ Active requirements for the Eid al-Fitr 2026 launch (March 20-21). Validated fea
 | LAUNCH-01 | Phase 5 | Pending |
 | LAUNCH-02 | Phase 5 | Pending |
 | LAUNCH-03 | Phase 5 | Pending |
+| MOB-01 | Phase 6 | Pending |
+| MOB-02 | Phase 6 | Pending |
+| MOB-03 | Phase 6 | Pending |
+| MOB-04 | Phase 6 | Pending |
+| MOB-05 | Phase 6 | Pending |
