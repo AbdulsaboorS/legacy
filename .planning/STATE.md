@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 6 planned (6 plans, 4 waves). Vercel deployed at legacy-bice.vercel.app. Ready to execute Phase 6 waves 1-3.
-last_updated: "2026-03-19T05:45:00.000Z"
+status: Phase 6 planned. 6 plans across 4 waves. Waves 1-3 autonomous, Wave 4 human checkpoints.
+stopped_at: Completed 06-03-PLAN.md (codemagic.yaml)
+last_updated: "2026-03-19T07:11:39.024Z"
 progress:
-  total_phases: 7
-  completed_phases: 5
+  total_phases: 8
+  completed_phases: 6
   total_plans: 21
-  completed_plans: 15
+  completed_plans: 17
   percent: 57
 ---
 
@@ -62,6 +62,8 @@ Progress: [████░░░░░░] 57%
 | Phase 05-web-app-flow-polish P04 | 8min | 2 tasks | 3 files |
 | Phase 05.1-habit-detail-page P01 | 2min | 2 tasks | 2 files |
 | Phase 05.1-habit-detail-page P02 | 2min 34s | 1 tasks | 1 files |
+| Phase 06-mobile-app P03 | 1min | 1 tasks | 1 files |
+| Phase 06-mobile-app P01 | 56s | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -107,6 +109,8 @@ Recent decisions affecting current work:
 - [Phase 05.1-habit-detail-page]: showRefine boolean toggle (not refineHabitId string) — single-habit context makes string key unnecessary
 - [Phase 05.1-habit-detail-page]: Your Plan nav row uses !!habitPlan (not hasMasterplan) — only shows for confirmed saved plans, not during streaming
 - [Phase 05.1-habit-detail-page]: Inline streaming/error UI moved outside removed masterplan block — generation progress visible during no-plan habit generation on dashboard
+- [Phase 06-mobile-app]: APP_STORE_APPLE_ID stored as Codemagic env var reference not hardcoded — human sets numeric ID after creating App Store listing
+- [Phase 06-mobile-app]: [06-mobile-app]: submit_to_app_store false, submit_to_testflight true — TestFlight-only until human confirms readiness for full release
 
 ### Mobile App Strategy (Phase 6)
 
@@ -134,8 +138,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T05:45:00.000Z
-Stopped at: Phase 6 planned + verified. Vercel live. Ready to execute Phase 6.
+Last session: 2026-03-19T07:11:29.243Z
+Stopped at: Completed 06-03-PLAN.md (codemagic.yaml)
 Resume file: None
 
 ## MCP Setup
