@@ -148,7 +148,15 @@ Plans:
   3. All screens render correctly — no safe area overflow, keyboard issues
   4. Session persists after backgrounding and restoring app
   5. App Store submission accepted, app live on App Store
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Capacitor config (server.url) + install status-bar/keyboard plugins
+- [ ] 06-02-PLAN.md — Privacy policy page at /privacy (App Store required)
+- [ ] 06-03-PLAN.md — Codemagic CI/CD pipeline YAML for iOS build + TestFlight upload
+- [ ] 06-04-PLAN.md — Safe area insets CSS + viewport-fit=cover
+- [ ] 06-05-PLAN.md — Google OAuth deep link handler (NativeAuthHandler + platform-aware redirectTo)
+- [ ] 06-06-PLAN.md — Human checkpoint: npx cap add ios, Info.plist, Xcode device run, TestFlight
 
 ### Phase 7: Push Notifications + Launch
 **Goal**: Users get daily reminders and streak alerts. App is launch-ready with correct metadata, analytics, and error monitoring.
