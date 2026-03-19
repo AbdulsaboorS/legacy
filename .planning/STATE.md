@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Phase 5.1 complete + post-ship bug fixes (params unwrap, refine key normalization, double border). Ready for Phase 6.
-last_updated: "2026-03-18T23:59:00.000Z"
+status: executing
+stopped_at: Phase 6 planned (6 plans, 4 waves). Vercel deployed at legacy-bice.vercel.app. Ready to execute Phase 6 waves 1-3.
+last_updated: "2026-03-19T05:45:00.000Z"
 progress:
-  total_phases: 8
-  completed_phases: 6
-  total_plans: 15
+  total_phases: 7
+  completed_phases: 5
+  total_plans: 21
   completed_plans: 15
   percent: 57
 ---
@@ -20,13 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** A Muslim opens Legacy daily, logs habits, sees their circle doing the same, and feels Ramadan's momentum carried forward.
-**Current focus:** Phase 5 — Web App Flow Polish
+**Current focus:** Phase 6 — Mobile App (iOS via Capacitor)
 
 ## Current Position
 
-Phase: 4 of 7 COMPLETE ✓ — next up: Phase 5 (Web App Flow Polish)
-Status: Phase 4 human verified. Feed shows log/milestone/joined cards, reactions work, member board correct.
-Next action: `/gsd:plan-phase 5`
+Phase: 5.1 of 7 COMPLETE ✓ — executing Phase 6 (Mobile App)
+Status: Phase 6 planned. 6 plans across 4 waves. Waves 1-3 autonomous, Wave 4 human checkpoints.
+Next action: `/gsd:execute-phase 6`
 
 Progress: [████░░░░░░] 57%
 
@@ -112,7 +112,7 @@ Recent decisions affecting current work:
 
 - **iOS only** for v1 — no Android
 - **Approach**: Capacitor WebView pointing at Vercel production URL — no static export, keeps all API routes/middleware/server components
-- **Blocker**: Must deploy to Vercel first — Capacitor WebView needs a live HTTPS URL
+- **Vercel**: DEPLOYED ✓ — https://legacy-bice.vercel.app (GitHub auto-deploy connected)
 - **Hardest piece**: Google OAuth deep links — custom URL scheme `app.joinlegacy://`, Info.plist entry, `appUrlOpen` listener, Supabase redirect registration
 - **iOS gotchas to fix**: safe area insets (`env(safe-area-inset-*)`), keyboard pushing content (`@capacitor/keyboard`), status bar theme (`@capacitor/status-bar`)
 - **Apple requirements**: Developer account ($99/year), provisioning profile + signing cert, App Store Connect listing, privacy policy page, test credentials in review notes
@@ -134,8 +134,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-18T23:40:33.058Z
-Stopped at: Completed 05.1-02-PLAN.md
+Last session: 2026-03-19T05:45:00.000Z
+Stopped at: Phase 6 planned + verified. Vercel live. Ready to execute Phase 6.
 Resume file: None
 
 ## MCP Setup
