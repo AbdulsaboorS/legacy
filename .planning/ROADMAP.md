@@ -159,9 +159,10 @@ Plans:
 - [ ] 06-06-PLAN.md — Human checkpoint: npx cap add ios, Info.plist, Xcode device run, TestFlight
 
 ### Phase 7: Push Notifications + Launch
-**Goal**: Users get daily reminders and streak alerts. App is launch-ready with correct metadata, analytics, and error monitoring.
+**Goal**: Users get daily reminders and streak alerts. Ships as v1.1 App Store update after v1.0 approval.
 **Owner**: Full-stack
 **Depends on**: Phase 6
+**Strategy**: Build in parallel while v1.0 is in App Store review. Web changes deploy to Vercel immediately (all users get them). New Codemagic build submitted as v1.1 update once v1.0 is approved — no wait needed since it's an existing app (faster review).
 **Already done**:
   - device_tokens schema + push RPCs (migration applied)
   - recalculate_streak + send_halaqa_reaction RPCs applied
