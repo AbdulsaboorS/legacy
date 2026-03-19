@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 6 planned. 6 plans across 4 waves. Waves 1-3 autonomous, Wave 4 human checkpoints.
-stopped_at: Completed 06-mobile-app-04 (iOS safe area CSS + viewportFit cover)
-last_updated: "2026-03-19T07:25:00.109Z"
+stopped_at: Completed 06-mobile-app-05 (Google OAuth deep link handler)
+last_updated: "2026-03-19T07:29:05.964Z"
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 20
   percent: 57
 ---
 
@@ -66,6 +66,7 @@ Progress: [████░░░░░░] 57%
 | Phase 06-mobile-app P01 | 56s | 2 tasks | 3 files |
 | Phase 06-mobile-app P02 | 1min 18s | 1 tasks | 1 files |
 | Phase 06-mobile-app P04 | 6min | 2 tasks | 2 files |
+| Phase 06-mobile-app P05 | 118s | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,7 @@ Recent decisions affecting current work:
 - [Phase 06-mobile-app]: Privacy page is a server component with no auth — required for App Store reviewers to access without login
 - [Phase 06-mobile-app]: env(safe-area-inset-*) on body — returns 0 on web, activates on iOS Capacitor builds with viewport-fit=cover; no visual regression on desktop
 - [Phase 06-mobile-app]: Beta banner top:0 needs no safe area adjustment — Capacitor overlaysWebView:false places coordinate origin below status bar
+- [Phase 06-mobile-app]: NativeAuthHandler uses createNativeClient (localStorage-based) for Capacitor OAuth; setSession+refreshSession pattern fires onAuthStateChange; userAgent fallback guards against server.url isNativePlatform() issue
 
 ### Mobile App Strategy (Phase 6)
 
@@ -146,8 +148,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T07:25:00.107Z
-Stopped at: Completed 06-mobile-app-04 (iOS safe area CSS + viewportFit cover)
+Last session: 2026-03-19T07:29:05.962Z
+Stopped at: Completed 06-mobile-app-05 (Google OAuth deep link handler)
 Resume file: None
 
 ## MCP Setup

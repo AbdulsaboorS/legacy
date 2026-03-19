@@ -180,4 +180,4 @@ Plans:
 | 2. AI + Web Flow | ✓ Complete | 2026-03-16 |
 | 3. AI Plan Generation | ✓ Complete | 2026-03-17 |
 | 4. Live Circle Feed | ✓ Complete | 2026-03-17 |
-| 5. Web App Flow Polish | 4/4 | Complete    | 2026-03-18 | 6. Mobile App | 4/6 | In Progress|  | 7. Push Notifications + Launch | Not started | Migrations + packages done |
+| 5. Web App Flow Polish | 4/4 | Complete    | 2026-03-18 | 6. Mobile App | 5/6 | In Progress|  | 7. Push Notifications + Launch | Not started | Migrations + packages done |
