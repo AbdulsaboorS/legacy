@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 6 planned. 6 plans across 4 waves. Waves 1-3 autonomous, Wave 4 human checkpoints.
-stopped_at: Completed 06-mobile-app-05 (Google OAuth deep link handler)
-last_updated: "2026-03-19T07:29:05.964Z"
+stopped_at: "Checkpoint 06-06: awaiting human iOS build, TestFlight, and App Store steps"
+last_updated: "2026-03-19T07:32:47.776Z"
 progress:
   total_phases: 8
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 21
-  completed_plans: 20
+  completed_plans: 21
   percent: 57
 ---
 
@@ -67,6 +67,7 @@ Progress: [████░░░░░░] 57%
 | Phase 06-mobile-app P02 | 1min 18s | 1 tasks | 1 files |
 | Phase 06-mobile-app P04 | 6min | 2 tasks | 2 files |
 | Phase 06-mobile-app P05 | 118s | 3 tasks | 3 files |
+| Phase 06-mobile-app P06 | 0min | 0 tasks | 0 files |
 
 ## Accumulated Context
 
@@ -148,8 +149,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-19T07:29:05.962Z
-Stopped at: Completed 06-mobile-app-05 (Google OAuth deep link handler)
+Last session: 2026-03-19T07:32:47.774Z
+Stopped at: Checkpoint 06-06: awaiting human iOS build, TestFlight, and App Store steps
 Resume file: None
 
 ## MCP Setup

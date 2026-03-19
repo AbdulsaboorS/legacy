@@ -11,7 +11,7 @@ Seven phases. Web-first: fix AI plan generation, build the live circle feed, pol
 - [x] **Phase 3: AI Plan Generation** — Fix plan generation end-to-end so it actually works (completed 2026-03-17)
 - [x] **Phase 4: Live Circle Feed** — Real-time activity feed on circle detail, reactions on feed items, notification dots (completed 2026-03-17)
 - [x] **Phase 5: Web App Flow Polish** — UX polish, tab performance, streak sharing, join page, PWA basics (completed 2026-03-18)
-- [ ] **Phase 6: Mobile App** — Capacitor wrap, App Store, Google Play, OAuth deep links
+- [x] **Phase 6: Mobile App** — Capacitor wrap, App Store, Google Play, OAuth deep links (completed 2026-03-19)
 - [ ] **Phase 7: Push Notifications + Launch** — FCM, cron jobs, OG/SEO, analytics, error monitoring
 
 ## Phase Details
@@ -180,4 +180,4 @@ Plans:
 | 2. AI + Web Flow | ✓ Complete | 2026-03-16 |
 | 3. AI Plan Generation | ✓ Complete | 2026-03-17 |
 | 4. Live Circle Feed | ✓ Complete | 2026-03-17 |
-| 5. Web App Flow Polish | 4/4 | Complete    | 2026-03-18 | 6. Mobile App | 5/6 | In Progress|  | 7. Push Notifications + Launch | Not started | Migrations + packages done |
+| 5. Web App Flow Polish | 4/4 | Complete    | 2026-03-18 | 6. Mobile App | 6/6 | Complete   | 2026-03-19 | 7. Push Notifications + Launch | Not started | Migrations + packages done |
