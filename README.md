@@ -37,23 +37,6 @@ For active development, see: [circles-ios](https://github.com/AbdulsaboorS/circl
 - **AI**: Google Gemini 2.0 Flash
 - **Deploy**: Vercel
 
----
-
-## Running Locally
-
-```bash
-npm install
-npm run dev
-npm run build
-```
-
-### Environment Variables
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-GEMINI_API_KEY=
-```
 
 ---
 
