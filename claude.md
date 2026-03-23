@@ -1,9 +1,10 @@
-# Legacy — Post-Ramadan Habit Tracker
+# Legacy — Post-Ramadan Habit Tracker (Web — Frozen)
+
+## Status
+**This repo is frozen.** Active development has moved to the native iOS app at [circles-ios](https://github.com/AbdulsaboorS/circles-ios). This web app is live at [legacy-bice.vercel.app](https://legacy-bice.vercel.app) as a marketing site and PWA fallback. No new features are being built here.
 
 ## Overview
-A progressive web app (PWA) helping Muslims carry their Ramadan spiritual habits into sustainable daily routines. Users set up their Ramadan habits, receive AI-powered "graceful step-down" suggestions, and track daily progress with streaks, Shawwal fasting, and Prophetic motivation.
-
-**Launch target**: Eid al-Fitr 2026 (March 20-21)
+A progressive web app (PWA) helping Muslims carry their Ramadan spiritual habits into sustainable daily routines. All 6 planned phases are complete and deployed.
 
 ## Tech Stack
 - **Framework**: Next.js 14 (App Router, TypeScript)

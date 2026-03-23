@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Legacy — Post-Ramadan Habit Tracker (Web)
 
-## Getting Started
+**Live at**: [legacy-bice.vercel.app](https://legacy-bice.vercel.app)
 
-First, run the development server:
+---
+
+## What This Is
+
+Legacy started as a progressive web app (PWA) helping Muslims carry their Ramadan spiritual habits into sustainable daily routines after Eid. Users set up their habits, receive AI-powered personalized step-down plans, track daily progress with streaks, and stay accountable through private circles (Halaqas).
+
+The web app is fully built and deployed. It includes:
+- Google OAuth sign-in via Supabase
+- 4-step onboarding with background AI plan generation (Gemini 2.0 Flash)
+- Daily habit check-in with streak tracking and grace day system
+- AI-powered 28-day personalized habit plans with streaming refinement
+- Private accountability circles with live activity feed, reactions, and invite links
+- Habit detail page with plan history and regeneration
+- PWA installable, Capacitor iOS wrap built
+
+---
+
+## Where We're Headed
+
+After building out the full web experience, the product direction has evolved. **Active development has moved to a native iOS app** — a deeper, more social take on Islamic accountability built natively in Swift/SwiftUI.
+
+The web app remains live as a **marketing site and PWA fallback**. No new features are being added here.
+
+For active development, see: [circles-ios](https://github.com/AbdulsaboorS/circles-ios)
+
+---
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router, TypeScript)
+- **Styling**: Tailwind CSS v4 + inline styles
+- **Auth + DB**: Supabase (Google OAuth + Postgres + RLS)
+- **AI**: Google Gemini 2.0 Flash
+- **Deploy**: Vercel
+
+---
+
+## Running Locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+GEMINI_API_KEY=
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Status: Frozen
 
-## Learn More
+All 6 phases of web development complete. Stable and deployed. Future product work lives in the native iOS app.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Phase | Status |
+|-------|--------|
+| 1. Circles UI | ✓ Complete |
+| 2. AI + Web Flow Fixes | ✓ Complete |
+| 3. AI Plan Generation | ✓ Complete |
+| 4. Live Circle Feed | ✓ Complete |
+| 5. Web App Flow Polish | ✓ Complete |
+| 6. Mobile (Capacitor wrap) | ✓ Complete |
+| 7. Push Notifications | Deferred to native app |

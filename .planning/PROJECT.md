@@ -1,5 +1,9 @@
 # Legacy — Post-Ramadan Habit Tracker
 
+## Status: Frozen (2026-03-23)
+
+Active development has moved to the native iOS app (circles-ios repo). This web app is live at legacy-bice.vercel.app as a marketing site and PWA fallback. The product has pivoted to a native Swift/SwiftUI app with a deeper social mechanic — see circles-ios for current direction.
+
 ## What This Is
 
 Legacy is a progressive web app (PWA) helping Muslims sustain their Ramadan spiritual habits year-round. Users set up their core habits, receive AI-powered "graceful step-down" suggestions, track daily progress with streaks, and hold each other accountable through private accountability circles (Halaqas). Launch target: Eid al-Fitr 2026 (March 20-21).
